@@ -5,6 +5,11 @@ description: "Workflow 1: Full idea discovery pipeline to go from a broad resear
 
 # Workflow 1: Idea Discovery Pipeline
 
+> **Deprecated — use [`/autoresearch`](../autoresearch/SKILL.md).**
+> This workflow is superseded by the autoresearch pipeline (S1 literature → S2 ideas →
+> S3 ranking → S4 method, then Gate A) and is scheduled for removal in the next cleanup.
+> `/autoresearch "<direction>"` runs the same chain against the `.autoresearch` state machine.
+
 > **Before each reviewer slot**, follow [Selectable Reviewers](../shared-references/reviewer-backends.md):
 > resolve invocation → `.aris/reviewer.json` → Codex default (fresh native reviewer)
 > with `reviewer_route.py` through the canonical helper resolver, preserving this

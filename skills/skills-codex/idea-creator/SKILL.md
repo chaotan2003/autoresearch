@@ -20,6 +20,19 @@ when the state machine says so, and it does not continue into the next stage.
 Close it with `python3 "$STATE" done` (resolve `$STATE` as in `/autoresearch` § Helper resolution), which refuses to pass while a promised file is missing.
 Everything below is this stage's method; the table decides when the stage is done.
 
+### Direction diversity write-back (S2)
+
+Before generating ideas, read the directions already tried — the research-wiki Failed
+Ideas list plus `.aris/runs/<run_id>.iterations.jsonl` — and forbid candidates that are
+too close to one of them. After choosing the frame, record it with the resolved helper:
+
+```bash
+python3 <resolved-iteration_log.py> note . <run_id> idea-generation 0 --direction "<frame>"
+```
+
+Skipping this write-back is what lets an overnight loop re-propose the same idea eight
+times; `/autoresearch` relies on it to resume without repeating itself.
+
 > **Before each reviewer slot**, follow [Selectable Reviewers](../shared-references/reviewer-backends.md):
 > resolve invocation → `.aris/reviewer.json` → Codex default (fresh native reviewer)
 > with `reviewer_route.py` through the canonical helper resolver, preserving this

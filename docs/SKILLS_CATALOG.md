@@ -25,8 +25,8 @@ End-to-end pipelines that chain many sub-skills. Most users start here.
 | Skill | Role | Requires |
 |---|---|---|
 | [`/autoresearch`](../skills/autoresearch/SKILL.md) | **The pipeline** — 8-stage state machine (literature → ideas → ranking → method → baseline → contract → implementation → experiments) with two human gates; `/autoresearch --resume` continues where the run stopped | Codex MCP, agy (Antigravity) |
-| [`/idea-discovery`](../skills/idea-discovery/SKILL.md) | **Workflow 1** — research-lit → idea-creator → novelty-check → research-review → research-refine-pipeline | Codex MCP |
-| [`/idea-discovery-robot`](../skills/idea-discovery-robot/SKILL.md) | Workflow 1 adapter for robotics / embodied AI — robotics-aware literature survey + benchmark-anchored ideation | Codex MCP |
+| [`/idea-discovery`](../skills/idea-discovery/SKILL.md) | ⚠️ **Deprecated** — superseded by [`/autoresearch`](../skills/autoresearch/SKILL.md); scheduled for removal | Codex MCP |
+| [`/idea-discovery-robot`](../skills/idea-discovery-robot/SKILL.md) | ⚠️ **Deprecated** — use `/autoresearch --robot`; scheduled for removal | Codex MCP |
 | [`/experiment-bridge`](../skills/experiment-bridge/SKILL.md) | **Workflow 1.5** — read experiment plan → implement code → sanity check → deploy to GPU → collect initial results | GPU (local / remote / Vast / Modal) |
 | [`/auto-review-loop`](../skills/auto-review-loop/SKILL.md) | **Workflow 2** — autonomous review → fix → re-review until positive or max rounds; uses Codex MCP reviewer | Codex MCP |
 | [`/auto-review-loop-llm`](../skills/auto-review-loop-llm/SKILL.md) | Same as Workflow 2 but uses any OpenAI-compatible LLM via [`llm-chat`](../mcp-servers/llm-chat/) MCP server | llm-chat MCP |

@@ -7,6 +7,11 @@ allowed-tools: Bash(*), Read, Write, Edit, Grep, Glob, WebSearch, WebFetch, Skil
 
 # Robotics Idea Discovery Pipeline
 
+> **Deprecated — use [`/autoresearch`](../autoresearch/SKILL.md) with `--robot`.**
+> The robotics adapter is superseded: `/autoresearch --robot` reads `research/direction.md`
+> for the robot-specific brief and runs the same eight stages. Removal is scheduled for the
+> next cleanup.
+
 > **Before each reviewer slot**, follow [Selectable Reviewers](../shared-references/reviewer-backends.md):
 > resolve invocation → `.aris/reviewer.json` → Claude Code default (Codex MCP)
 > with `reviewer_route.py` through the canonical helper resolver, preserving this

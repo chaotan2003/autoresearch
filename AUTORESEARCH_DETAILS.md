@@ -296,3 +296,46 @@ Gate A 才能拦。结论：Gate A 不能做成自动通过，必须留给人。
 
 规则：**模型名里的 `-low/-medium/-high` 就是 effort 档位，两个参数必须同档，或者只传其中一个。**
 `model: gemini-3.8-flash-high` 配 `effort: high` 正确；配 `medium` 会 500 前失败。
+
+## O. B5 已做 / 待做（迁移地图）
+
+### 已做（2026-11-06 round 2，零风险部分）
+
+- `skills/idea-discovery/`、`skills/idea-discovery-robot/` 及其 Codex 镜像顶部加了
+  **Deprecated 横幅**，指向 `/autoresearch`（robot 版指向 `/autoresearch --robot`）。
+- `docs/SKILLS_CATALOG.md` 两行标成 ⚠️ Deprecated（**行保留**，因为库存检查要求每个
+  skill 都在目录里）。
+- `iteration_log.py --direction` 的方向去重写回从 `idea-discovery` 迁到
+  `idea-creator`（S2 的真实归属）：主线和 Codex 镜像各加一节
+  `### Direction diversity write-back (S2)`。
+- `987 passed / 4 skipped`，库存检查一致。
+
+### 待做（真删，约 1-2 小时）
+
+删除清单：
+
+1. 目录：`skills/idea-discovery/`、`skills/idea-discovery-robot/` 及两个 Codex 镜像目录。
+2. 测试整删：`tests/test_auto_proceed_contract.py`（127 行，全部关于 idea-discovery 的
+   AUTO_PROCEED 契约）、`tests/test_idea_discovery_gate.py`（400 行）。
+3. 工具整删：`tools/idea_discovery_gate.py`（删 skill 后成孤儿）。
+4. 库存：`tools/skill-groups.tsv` 删 2 行；`docs/SKILLS_CATALOG.md` 删 2 行；
+   11 处 live count 从 **51 → 49**。
+5. 检查器：`tools/check_skills_inventory.py` 的 `iteration_log` 接线检查现在读的是
+   `skills/idea-discovery/SKILL.md`，删后必抛异常 → 改成读
+   `skills/idea-creator/SKILL.md`（已经写回该内容，改一行路径即可）。
+6. 跨 skill 引用 16 处需改写为 `/autoresearch`：
+   `alphaxiv`、`experiment-bridge`、`feishu-notify`、`render-html`、
+   `research-implement-feature`、`research-lit`、`research-review`、`wiki-enrich`，
+   以及 `shared-references/` 下的 `integration-contract.md`、`output-composition.md`、
+   `output-language.md`、`output-manifest.md`、`resumable-runs.md`。
+7. 冻结 overlay `skills/skills-codex-gemini-review/` 里仍有这两个 skill 的副本；
+   要么一并删并改 `tests/test_codex_skill_mirror.py` 的 `expected_gemini` 集合
+   （7 → 5），要么保留并在 README 里说明它是历史快照。**建议删**，否则目录里留着
+   指向已删 skill 的冻结副本。
+8. `tests/test_codex_skill_mirror.py:424` 的 `required_terms` 里有 `idea-discovery`
+   条目，随目录一起删。
+
+**为什么这轮没做**：一次删除会同时改 8 个 skill 文档 + 5 个 shared-reference + 2 个
+测试文件 + 1 个工具 + 1 个检查器，任何一处漏改都会让仓库变红；必须一次提交改完并
+跑两次全量测试。弃用横幅 + 目录下架 + 写回迁移已经把"用户不会被引导到旧编排器"这件事
+先落地了。
