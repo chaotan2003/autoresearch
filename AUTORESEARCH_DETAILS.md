@@ -274,3 +274,25 @@ Gate A 才能拦。结论：Gate A 不能做成自动通过，必须留给人。
 | `idea-discovery-robot` | 1 | 4 | 删；`--robot` 语义并入 `/autoresearch --robot` |
 | `experiment-bridge` | 1 | 9 | **不删**：它已是 S7 实现阶段，改名 `method-implement` 的成本高于收益（1 个 test + 9 处文档 + 目录/镜像） |
 | `auto-review-loop` | 4 | 15 | **不删**：它是独立的评审闭环（Workflow 2），autoresearch 的 S3/S8 评审不替代它 |
+
+## N. B2 实测：MCP 服务端已跑通（2026-11-06）
+
+用 `mcp-servers/model-worker/client.py --local` 走完整 MCP stdio 协议（initialize → tools/list → tools/call），
+不经过 DSH：
+
+| 项 | 结果 |
+|---|---|
+| 环境 | `AGY_AGENT=aris-scout`，`MODEL_WORKER_ALLOWED_ROOTS=["/home/tc/Desktop/test"]` |
+| 调用 | `worker{prompt, cwd, backend: antigravity, model: gemini-3.8-flash-high, effort: high}` |
+| 返回 | `status: SUCCESS`，`threadId: 4690072d-…`，`model: gemini-3.8-flash-high`，`effort: high` |
+| 副作用 | 真写出 `research/mcp-smoke.md`（3 篇按年份排序的论文表） |
+
+**唯一没验的是 DSH 自己的 MCP client 接线**——那要重启一次 DSH 才会加载 4 个新条目。
+
+### 新坑：`--model` 变体名自带 effort 后缀
+
+`agy --model gemini-3.8-flash-high --effort medium` 直接报错：
+`invalid model selection: --model gemini-3.8-flash-high conflicts with --effort=medium`。
+
+规则：**模型名里的 `-low/-medium/-high` 就是 effort 档位，两个参数必须同档，或者只传其中一个。**
+`model: gemini-3.8-flash-high` 配 `effort: high` 正确；配 `medium` 会 500 前失败。

@@ -56,7 +56,7 @@
 |---|---|---|---|
 | B0 | 一个可回退的 git 提交点 | 10 分钟 | ✅ 完成（tag `pre-autoresearch`，工作树干净） |
 | B1 | `tools/autoresearch_state.py` 状态机 + 7 个测试 | 2-3 小时 | ✅ 完成（987 passed / 4 skipped） |
-| B2 | DSH 里能真调 agy 和 Codex | 1.5 小时 | 🟡 配置已写入，**等一次 DSH 重启**才算生效 |
+| B2 | DSH 里能真调 agy 和 Codex | 1.5 小时 | ✅ MCP 服务端协议级实测通过（整条链路真写出文件）；4 个条目已写入 DSH 配置，**等一次重启**加载 |
 | B3 | 8 个步骤各自能单独跑 | 6-8 小时 | ✅ 完成（3 个新 skill + 6 个 stage contract；51 skills，987 passed） |
 | B4 | 一条命令跑到闸门，能停能续 | 2 小时 | ✅ 完成（S1→S4 真跑，停在 Gate A；状态跨进程可续） |
 | B5 | 文档/测试/装机更新，CI 绿 | 2 小时 | 🟡 范围已实测：删 `/idea-discovery`、`/idea-discovery-robot`，保留 `experiment-bridge`、`auto-review-loop` |
