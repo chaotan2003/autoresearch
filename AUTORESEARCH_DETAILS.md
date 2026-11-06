@@ -228,3 +228,26 @@ B2 前置：
 
 - `docs/adr/0001-replace-orchestrators-with-autoresearch.md`：为什么删掉 W1/W1.5/W2 而不是并存。
 - `docs/adr/0002-dsh-as-orchestrator-via-mcp.md`：为什么选 DSH+MCP 而非纯 CLI 或 Claude Code 优先。
+## K. 试跑记录（2026-11-06，真调用，非模拟）
+
+跑在 `/home/tc/Desktop/test/autoresearch-demo`，用 B1 状态机驱动，S1→S2→S3 三步全自动交接。
+
+| 步 | 执行体 | 产出 | 校验结果 |
+|---|---|---|---|
+| S1 | `agy --agent aris-scout` | `paper_search.md` 12.4 KB / 4 个角度 / 13 篇；`baseline_selection.md` 1.0 KB | `verify_papers.py`：**13/13 verified，hallucination_rate 0.0** |
+| S2 | `agy --agent aris-model-worker` | `ideas.md` 1.3 KB（10 条）；`idea_cards.md` 15.9 KB（10 卡 × 7 字段，字段数实测 10/10/10/10/10/10/10） | 状态机 `done` 通过 |
+| S3 | `codex exec --sandbox danger-full-access` | `idea_ranking.md` 3.1 KB：8 项打分表 + top3 + weak 列表 | 明确指出 2 个 idea 是"参数扫描" |
+
+**结论**：三层机制（起进程 / 传路径 / 核文件）成立；三个 agent 三个独立上下文，没有串味。
+
+### 本次踩到的新坑（B2 必看）
+
+1. **`codex` 的 provider 需要 `IAIEMAS_API_KEY`**，它定义在 `~/.config/iaiemas/env.sh`（由 `~/.bashrc` source）。DSH 进程环境里没有 → MCP 的 codex 条目必须包一层：
+   ```yaml
+   command: bash
+   args: ['-c', 'set -a; . "$HOME/.config/iaiemas/env.sh"; set +a; exec python3 <repo>/mcp-servers/codex-exec/server.py']
+   ```
+   这样密钥不进 yml。
+2. **`codex --sandbox workspace-write` 在本机直接失败**：`bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`。必须传 `danger-full-access`。所以 skill 里调 `mcp__codex__codex` 时要显式带 `sandbox: "danger-full-access"`。
+3. **`agy` headless 必须 `--dangerously-skip-permissions`**，否则工具调用被自动拒绝，只回一句 `no output produced`。
+4. **`agy` profile 的 `commandExecutionPolicy` 只接受 `off` / `auto`**；写 `on` 会让该 profile 静默从 `agy agent` 里消失。
