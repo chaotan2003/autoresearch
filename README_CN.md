@@ -505,7 +505,7 @@ ARIS 用 **48 个可组合 skill** 覆盖科研全生命周期——文献查新
 <details>
 <summary><b>完整功能清单</b></summary>
 
-- 📊 **48 个可组合 skill** — 自由混搭，或串联为完整流水线（`/idea-discovery`、`/auto-review-loop`）。[完整目录 →](docs/SKILLS_CATALOG.md)
+- 📊 **51 个可组合 skill** — 自由混搭，或串联为完整流水线（`/idea-discovery`、`/auto-review-loop`）。[完整目录 →](docs/SKILLS_CATALOG.md)
 - 🔍 **文献 & 查新** — 多源论文搜索（**Zotero** + **Obsidian** + **本地 PDF** + arXiv/Scholar）+ 跨模型查新验证
 - 💡 **Idea 发现** — 文献调研 → 头脑风暴 8-12 个 idea → 查新 → GPU pilot 实验 → 排名报告
 - 🔄 **自动 review 循环** — 4 轮自主审稿，一夜从 5/10 提升到 7.5/10，自动跑 20+ 组 GPU 实验
@@ -524,7 +524,7 @@ ARIS 用 **48 个可组合 skill** 覆盖科研全生命周期——文献查新
 <a id="skills-catalog"></a>
 <a id="-skills-catalog"></a>
 
-ARIS 现有 **48+ 个 skill**，覆盖文献调研、idea 生成、实验、审计、论文写作、meta 工具等——完整目录（每个 skill 含 role / category / 依赖）在 **[`docs/SKILLS_CATALOG.md`](docs/SKILLS_CATALOG.md)**，独立成文以保持 README 可扫读。
+ARIS 现有 **51+ 个 skill**，覆盖文献调研、idea 生成、实验、审计、论文写作、meta 工具等——完整目录（每个 skill 含 role / category / 依赖）在 **[`docs/SKILLS_CATALOG.md`](docs/SKILLS_CATALOG.md)**，独立成文以保持 README 可扫读。
 
 <details>
 <summary><b>常用入口</b> —— 场景 → 入口 skill</summary>

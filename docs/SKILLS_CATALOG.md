@@ -1,6 +1,6 @@
 # ARIS Skills Catalog
 
-Every skill that ships with ARIS, grouped by role. **48 skills** as of the
+Every skill that ships with ARIS, grouped by role. **51 skills** as of the
 latest update; new skills land via PR and get added to the table below.
 
 - Each `Skill` link goes to the canonical `SKILL.md` (the LLM-readable spec).
@@ -24,6 +24,7 @@ End-to-end pipelines that chain many sub-skills. Most users start here.
 
 | Skill | Role | Requires |
 |---|---|---|
+| [`/autoresearch`](../skills/autoresearch/SKILL.md) | **The pipeline** — 8-stage state machine (literature → ideas → ranking → method → baseline → contract → implementation → experiments) with two human gates; `/autoresearch --resume` continues where the run stopped | Codex MCP, agy (Antigravity) |
 | [`/idea-discovery`](../skills/idea-discovery/SKILL.md) | **Workflow 1** — research-lit → idea-creator → novelty-check → research-review → research-refine-pipeline | Codex MCP |
 | [`/idea-discovery-robot`](../skills/idea-discovery-robot/SKILL.md) | Workflow 1 adapter for robotics / embodied AI — robotics-aware literature survey + benchmark-anchored ideation | Codex MCP |
 | [`/experiment-bridge`](../skills/experiment-bridge/SKILL.md) | **Workflow 1.5** — read experiment plan → implement code → sanity check → deploy to GPU → collect initial results | GPU (local / remote / Vast / Modal) |
@@ -61,6 +62,7 @@ Generating, refining, planning research ideas before implementation.
 |---|---|---|
 | [`/idea-creator`](../skills/idea-creator/SKILL.md) | Brainstorm 8-12 ideas, filter by feasibility, pilot on GPU, rank by signal | Codex MCP, GPU for pilots |
 | [`/research-refine`](../skills/research-refine/SKILL.md) | Iterative method refinement — problem anchor → up to 5 review rounds → score ≥ 9 | Codex MCP |
+| [`/research-contract`](../skills/research-contract/SKILL.md) | Freeze the claim into an immutable experiment contract — claim, variables, primary experiment, ablations, evidence map, budget, stop conditions; sha256-frozen at Gate B | None |
 | [`/experiment-plan`](../skills/experiment-plan/SKILL.md) | Turn a refined proposal into a claim-driven experiment roadmap — ablations, budgets, run order | None |
 | [`/ablation-planner`](../skills/ablation-planner/SKILL.md) | Design ablation studies from a reviewer's perspective (after main results pass `/result-to-claim`) | Codex MCP |
 | [`/formula-derivation`](../skills/formula-derivation/SKILL.md) | Structure theory derivations — organize assumptions, build derivation chains, turn scattered equations into coherent narrative | None |
@@ -82,6 +84,7 @@ GPU job submission, scheduling, monitoring, profiling.
 | Skill | Role | Requires |
 |---|---|---|
 | [`/research-implement-feature`](../skills/research-implement-feature/SKILL.md) | Build from a plain "implement X" request — runnable spine first, then one feature per rung; every under-determined decision declared in an assumption ledger before the code depends on it, plus a cross-model sweep for the ones that slipped through undeclared | Codex MCP |
+| [`/baseline-repro`](../skills/baseline-repro/SKILL.md) | Reproduce the selected baseline before any improvement claim — pinned environment, published setting, reproduced vs expected number, honest deviation instead of tuning | GPU for the baseline run |
 | [`/run-experiment`](../skills/run-experiment/SKILL.md) | Deploy experiments to local / remote / Vast.ai / Modal GPU | GPU (configurable) |
 | [`/monitor-experiment`](../skills/monitor-experiment/SKILL.md) | Monitor running experiments, check progress, collect results | None |
 | [`/analyze-results`](../skills/analyze-results/SKILL.md) | Compute statistics, generate comparison tables, surface insights from experiment results | None |

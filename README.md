@@ -537,7 +537,7 @@ ARIS chains **48 composable skills** across the whole research lifecycle — lit
 <details>
 <summary><b>Full feature list</b></summary>
 
-- 📊 **48 composable skills** — mix and match, or chain into full pipelines (`/idea-discovery`, `/auto-review-loop`). See [full catalog →](docs/SKILLS_CATALOG.md)
+- 📊 **51 composable skills** — mix and match, or chain into full pipelines (`/idea-discovery`, `/auto-review-loop`). See [full catalog →](docs/SKILLS_CATALOG.md)
 - 🔍 **Literature & novelty** — multi-source paper search (**Zotero** + **Obsidian** + **local PDFs** + arXiv/Scholar) + cross-model novelty verification
 - 💡 **Idea discovery** — literature survey → brainstorm 8-12 ideas → novelty check → GPU pilot experiments → ranked report
 - 🔄 **Auto review loop** — 4-round autonomous review, 5/10 → 7.5/10 overnight with 20+ GPU experiments
@@ -556,7 +556,7 @@ ARIS chains **48 composable skills** across the whole research lifecycle — lit
 <a id="skills-catalog"></a>
 <a id="-skills-catalog"></a>
 
-ARIS ships **48+ skills** across literature, ideation, experiments, audit, writing, and meta-utilities — the full catalog (role / category / requirements per skill) lives in **[`docs/SKILLS_CATALOG.md`](docs/SKILLS_CATALOG.md)** to keep this README scannable.
+ARIS ships **51+ skills** across literature, ideation, experiments, audit, writing, and meta-utilities — the full catalog (role / category / requirements per skill) lives in **[`docs/SKILLS_CATALOG.md`](docs/SKILLS_CATALOG.md)** to keep this README scannable.
 
 <details>
 <summary><b>Start here</b> — common entry points (use case → skill)</summary>

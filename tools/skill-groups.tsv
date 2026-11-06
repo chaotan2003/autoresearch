@@ -76,3 +76,6 @@ skill	render-html	meta-utils	-	MD/JSON 工件渲染成 HTML 报告
 skill	meta-optimize	meta-utils	-	skill 语料自优化提案
 skill	meta-apply	meta-utils	meta-optimize	落地已批准的语料补丁
 skill	feishu-notify	meta-utils	-	飞书通知
+skill	autoresearch	ideation	-	八阶段研究流水线总控(文献→idea→排序→方法→baseline→合同→实现→实验)
+skill	research-contract	experiments	-	把研究主张冻结成不可变实验合同(sha256)
+skill	baseline-repro	experiments	-	复现 baseline 并记录偏差,不调参凑数
