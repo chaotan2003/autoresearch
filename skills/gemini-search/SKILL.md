@@ -1,17 +1,17 @@
 ---
 name: gemini-search
-description: Search research papers via Gemini for broad literature discovery. Use when user says "gemini search", "gemini papers", "search with gemini", or wants AI-powered literature discovery beyond arXiv/Semantic Scholar indexes.
+description: Search research papers via agy (Antigravity CLI driving a Gemini model) for broad literature discovery. Use when user says "gemini search", "gemini papers", "agy search", "search with gemini", or wants AI-powered literature discovery beyond arXiv/Semantic Scholar indexes.
 argument-hint: "[search-query]"
-allowed-tools: Bash(*), Read, Write, mcp__gemini-cli__*
+allowed-tools: Bash(*), Read, Write, mcp__model-scout__*
 ---
 
-# Gemini Literature Search
+# Gemini Literature Search (via agy)
 
 Search query: $ARGUMENTS
 
 ## Role & Positioning
 
-This skill uses Gemini as a **broad literature discovery** source:
+This skill uses the Gemini model, driven by the **`agy`** CLI, as a **broad literature discovery** source:
 
 | Skill | Source | Best for |
 |-------|--------|----------|
@@ -19,98 +19,77 @@ This skill uses Gemini as a **broad literature discovery** source:
 | `/semantic-scholar` | Semantic Scholar API | Published venue papers (IEEE, ACM, Springer) with citation counts |
 | `/deepxiv` | DeepXiv CLI | Layered reading: search, brief, section map, section reads |
 | `/exa-search` | Exa API | Broad web search: blogs, docs, news, companies, research papers |
-| `/gemini-search` | Gemini MCP / CLI | **AI-powered broad literature discovery** — searches across multiple angles, aliases, and sub-problems |
+| `/gemini-search` | `agy` + `aris-scout` | **AI-powered broad literature discovery** — searches across multiple angles, aliases, and sub-problems |
 
-Use Gemini when you want AI-driven discovery that goes beyond keyword matching — Gemini decomposes topics into sub-problems, explores naming variants, and surfaces papers that traditional API searches may miss.
+Use `agy` when you want AI-driven discovery that goes beyond keyword matching — it decomposes topics into sub-problems, explores naming variants, opens pages to confirm identifiers, and surfaces papers that traditional API searches may miss.
 
 ## Constants
 
-- **MAX_RESULTS = 15** — Target number of papers Gemini should find.
+- **MAX_RESULTS = 15** — Target number of papers the scout should find.
 - **MIN_YEAR = 2022** — Default minimum publication year. Override with `— year: 2020-`.
-- **DEFAULT_MODEL = auto-gemini-3** — Auto-routes within the Gemini 3 family (Pro / Flash) by server-side capacity. Required by `mcp__gemini-cli__ask-gemini` and `gemini-cli` v0.40+; explicit `gemini-3-pro-preview` is **silently downgraded to `gemini-2.5-pro`** on OAuth-personal / Google One AI Pro accounts when capacity is exhausted. Override with `— model: gemini-3-flash-preview` (Gemini 3 Flash explicit, faster, higher quota), or `— model: gemini-2.5-pro` / `gemini-2.5-flash` (legacy, only for users on older `gemini-cli` < v0.40). The MCP tool accepts all of these verbatim.
+- **DEFAULT_MODEL = gemini-3.8-flash-high** — Model passed to `agy --model`. Override with `— model: gemini-3-pro` when the query needs deeper synthesis. `agy models` lists what the logged-in account can actually reach.
 
 > Overrides (append to arguments):
 > - `/gemini-search "topic" — max: 20` — request up to 20 papers
 > - `/gemini-search "topic" — year: 2020-` — papers from 2020 onward
 > - `/gemini-search "topic" — code-only` — only papers with open-source code
 > - `/gemini-search "topic" — venues: NeurIPS,ICML,ICLR` — focus on specific venues
-> - `/gemini-search "topic" — model: gemini-3-flash-preview` — Gemini 3 Flash (faster, higher quota, less capable than Pro)
-> - `/gemini-search "topic" — model: auto-gemini-3` — auto-routes within the Gemini 3 family by load
-> - `/gemini-search "topic" — model: gemini-2.5-pro` — legacy (only if your `gemini-cli` < v0.40)
+> - `/gemini-search "topic" — model: gemini-3-pro` — stronger model for harder queries
 
 ## Environment & Setup
 
 ### Prerequisites
 
-1. **Node.js** v16.0.0+
-2. **Google Gemini CLI** — installed and authenticated
+1. **agy** (Antigravity CLI) — installed and authenticated with a Google account
+
    ```bash
-   npm install -g @google/gemini-cli
-   gemini auth
+   agy --version
    ```
-3. **gemini-mcp-tool** — MCP bridge for Claude Code ([jamubc/gemini-mcp-tool](https://github.com/jamubc/gemini-mcp-tool))
+
+2. **`aris-scout` agent profile** — provides the `search_web` and `read_url_content` tools
+
    ```bash
-   npm install -g gemini-mcp-tool
+   cp mcp-servers/model-worker/aris-scout.md ~/.gemini/config/agents/
+   agy agent      # must list aris-scout
    ```
 
 ### MCP Configuration
 
-In `~/.claude.json` (or `%APPDATA%\Claude\claude_desktop_config.json` for Claude Desktop), add:
+Register the bridge (preferred path). `AGY_AGENT` selects the `agy` agent profile:
 
 ```json
 {
   "mcpServers": {
-    "gemini-cli": {
-      "command": "gemini-mcp"
+    "model-scout": {
+      "command": "python3",
+      "args": ["/abs/path/to/aris/mcp-servers/model-worker/server.py"],
+      "env": {
+        "AGY_AGENT": "aris-scout",
+        "MODEL_WORKER_ALLOWED_ROOTS": "[\"/abs/project\"]"
+      }
     }
   }
 }
 ```
 
-Alternative via `npx` (auto-install):
-```json
-{
-  "mcpServers": {
-    "gemini-cli": {
-      "command": "npx",
-      "args": ["-y", "gemini-mcp-tool"]
-    }
-  }
-}
-```
-
-Or one-line setup:
-```bash
-claude mcp add gemini-cli -- npx -y gemini-mcp-tool
-```
+The CLI fallback below needs no MCP server at all.
 
 ### Authentication
 
-Gemini CLI uses your Google account or an API key. Reuse an existing Google account login, or set an API key in the same shell **before starting Claude Code** so the MCP process inherits it:
+`agy` reuses the Antigravity login; no `GEMINI_API_KEY` is involved and no `gemini` binary is ever called. Headless runs (MCP, `-p`) must pass `--dangerously-skip-permissions`, otherwise any tool that would prompt is auto-denied and the run returns "no output produced".
 
-```bash
-export GEMINI_API_KEY='your-key-here'
-claude
-```
+### Tools Used
 
-A separate tool-shell `export` does not update an already running host or MCP process. If you keep credentials in an environment file, load it explicitly before starting the host rather than relying on automatic `.env` loading.
-
-- Free key from [Google AI Studio](https://aistudio.google.com/apikey)
-- Flash model (`gemini-2.5-flash`) has a generous free tier (500 req/min)
-
-### Available MCP Tools
-
-| Tool | Parameters | Description |
-|------|-----------|-------------|
-| `mcp__gemini-cli__ask-gemini` | `prompt` (required), `model` (optional), `sandbox` (optional) | Ask Gemini for analysis or research; supports `@file` syntax |
-| `mcp__gemini-cli__sandbox-test` | `prompt` (required), `model` (optional) | Safe code execution in sandbox |
-| `mcp__gemini-cli__ping` | — | Connection test |
-| `mcp__gemini-cli__help` | — | Show Gemini CLI help |
+| Tool | Where | Description |
+|------|-------|-------------|
+| `search_web` | agy built-in | Broad multi-angle web/academic discovery |
+| `read_url_content` | agy built-in | Open a result page to confirm its arXiv ID or DOI |
+| `mcp__model-scout__worker` | MCP bridge | Start an `agy` session under the `aris-scout` profile |
 
 ### Verify Setup
 
 ```bash
-gemini --version
+agy agent | grep aris-scout
 ```
 
 ## Workflow
@@ -127,12 +106,16 @@ Parse `$ARGUMENTS` for:
 
 ### Step 2: Execute Search (MCP Priority)
 
-**Priority 1 — Gemini MCP** (preferred):
+**Priority 1 — agy over MCP** (preferred):
 
-Try calling `mcp__gemini-cli__ask-gemini` with the search prompt:
+Call `mcp__model-scout__worker` with the search prompt. It starts an `agy` session under the `aris-scout` profile:
 
 ```
-mcp__gemini-cli__ask-gemini({
+mcp__model-scout__worker({
+  backend: 'antigravity',
+  model: 'gemini-3.8-flash-high',
+  effort: 'high',
+  cwd: '<project root>',
   prompt: 'You are a research literature scout. Search comprehensively for papers on: "QUERY"
 
 IMPORTANT CONSTRAINTS:
@@ -158,25 +141,27 @@ Find at least MAX_RESULTS papers with good coverage across:
 - closely related variants of the topic
 
 Format as a numbered list with all fields for each paper.',
-  model: 'auto-gemini-3'
+  model: 'gemini-3.8-flash-high'
 })
 ```
 
-**Priority 2 — Gemini CLI fallback** (if MCP unavailable):
+**Priority 2 — agy CLI fallback** (if the MCP server is unavailable):
 
-If `mcp__gemini-cli__ask-gemini` fails or is not configured, fall back to CLI:
+If `mcp__model-scout__worker` fails or is not configured, run the same prompt through the CLI:
 
 ```bash
-gemini -p 'You are a research literature scout. Search comprehensively for papers on: "QUERY"
-...same prompt as above...' 2>/dev/null
+agy -p '<same prompt as above>' \
+  --agent aris-scout --mode accept-edits \
+  --disable-slash-commands --dangerously-skip-permissions \
+  --output-format text 2>/dev/null
 ```
 
-- **Timeout**: 120 seconds
-- **Stderr**: Pipe to `/dev/null` — contains hook warnings, not part of the response
+- **Timeout**: 300 seconds — the scout opens pages, which is slower than a chat completion
+- **Stderr**: pipe to `/dev/null`; `agy` logs progress there
 
 **When to use which:**
-- MCP is preferred because it integrates natively with Claude Code's tool system, handles model selection, and avoids shell escaping issues.
-- CLI fallback ensures the skill works even when MCP is not configured or the MCP server process has crashed.
+- MCP is preferred because it survives across calls, keeps a conversation thread, and avoids shell escaping issues.
+- CLI fallback needs no MCP server at all — useful when the bridge is not configured or has crashed.
 
 ### Step 3: Parse Results
 
@@ -223,9 +208,10 @@ After presenting results, suggest:
 
 ## Key Rules
 
-- **MCP first, CLI second.** Always try `mcp__gemini-cli__ask-gemini` before falling back to `gemini -p`.
-- **Gemini is a discovery source, not a database.** Its results may include papers it "knows about" from training data. Always cross-verify critical details (exact titles, venues, years) via `/semantic-scholar` or `/arxiv` when precision matters.
-- **Do not use Gemini for citation counts.** It may hallucinate citation numbers. Use Semantic Scholar for authoritative citation data.
-- **Pipe stderr to `/dev/null` in CLI mode** — Gemini CLI emits hook warnings on stderr.
-- **Timeout generously in CLI mode** — Gemini's thorough search can take 30-60 seconds. Set timeout to 120s.
+- **MCP first, CLI second.** Always try `mcp__model-scout__worker` before falling back to `agy -p`.
+- **The model is a discovery source, not a database.** Its results may include papers it "knows about" from training data. Always cross-verify critical details (exact titles, venues, years) via `/semantic-scholar` or `/arxiv` when precision matters.
+- **Do not trust model-reported citation counts.** They are often hallucinated. Use Semantic Scholar for authoritative citation data.
+- **Pipe stderr to `/dev/null` in CLI mode** — `agy` logs progress there.
+- **Timeout generously in CLI mode** — a real scout run opens pages, so 300s is normal. A 120s timeout cuts it off mid-search.
+- **`--dangerously-skip-permissions` is required headless.** Without it, `agy -p` cannot prompt and silently returns "no output produced".
 - If both MCP and CLI are unreachable, suggest using `/semantic-scholar`, `/arxiv`, or `/research-lit "topic" — sources: web` as alternatives.

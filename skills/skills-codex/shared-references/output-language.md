@@ -41,5 +41,3 @@ Determine the output language using this priority:
 | /research-refine-pipeline | Full | PIPELINE_SUMMARY.md follows setting |
 | /research-pipeline | Full | Inherits from sub-skills |
 | /result-to-claim | Full | Claim descriptions follow setting |
-| /paper-writing | Skip | Always English LaTeX for submission |
-| /paper-write | Skip | Always English LaTeX |

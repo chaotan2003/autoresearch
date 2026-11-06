@@ -18,10 +18,6 @@ TARGET_SKILLS = [
     "novelty-check",
     "research-refine",
     "auto-review-loop",
-    "paper-plan",
-    "paper-figure",
-    "paper-write",
-    "auto-paper-improvement-loop",
 ]
 
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n?", re.DOTALL)

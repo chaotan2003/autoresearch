@@ -6,7 +6,6 @@ Use this reference when drafting US patent applications for filing with USPTO.
 
 - Read when `JURISDICTION = "US"` or `JURISDICTION = "ALL"`
 - Read before writing claims in US format
-- Read during `/jurisdiction-format` for US output
 
 ## Applicable Law
 

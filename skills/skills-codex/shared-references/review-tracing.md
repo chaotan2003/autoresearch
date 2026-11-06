@@ -86,9 +86,7 @@ model. Unknown,
 requested-only, incomplete or negative outcomes remain provisional. The
 substantive verdict and call status stay separate. Identity evidence also stays
 separate: a known family relation alone never makes `independence_verified`
-true. The main pack's compatibility Copilot drive mode always stays provisional;
-its native host-event evidence and external-finalizer obligations remain as
-documented in the main [routing reference](../../shared-references/reviewer-routing.md).
+true.
 
 A trace's accepted classification does not replace the skill's proof, citation,
 experiment or submission gate. A deterministic verifier can accept only the

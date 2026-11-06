@@ -10,7 +10,6 @@ on:
       - 'README_CN.md'
       - 'AGENT_GUIDE.md'
       - 'docs/ARIS_INTRO.md'
-      - 'docs/ARIS_INTRO.html'
       - 'tools/check_skills_inventory.py'
       - 'tests/test_codex_skill_mirror.py'
       - 'tests/test_bounded_fanout_contract.py'

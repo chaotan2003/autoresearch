@@ -181,16 +181,6 @@ def test_unknown_executor_cannot_be_accepted(tmp_path: Path) -> None:
     assert request["acceptance_status"] == "provisional"
 
 
-def test_copilot_compatibility_trace_stays_drive_only(tmp_path: Path) -> None:
-    request, _, _ = save_trace(
-        tmp_path, "--backend", "copilot", "--executor-model", "claude-sonnet-4.5",
-        "--reported-reviewer-model", "gpt-5.4", "--review-completed", "--review-positive",
-        "--review-scope-complete", "--verdict", "ready",
-    )
-    assert request["review_independence"] == "cross-family"
-    assert request["acceptance_status"] == "provisional"
-
-
 def test_unknown_backend_remains_traceable_without_acceptance(tmp_path: Path) -> None:
     request, _, _ = save_trace(
         tmp_path, "--backend", "mystery-backend", "--executor-model", "gpt-6-astra",

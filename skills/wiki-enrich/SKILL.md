@@ -249,7 +249,7 @@ Also rebuild `query_pack.md` once at the end (single `python3 "$WIKI_SCRIPT" reb
 /research-wiki query "topic"        ← rebuild query_pack after big wiki changes
 ```
 
-After a fresh `/research-pipeline` run leaves Stage 1 Phase 1 done but Phase 2 not started (the failure mode that prompted this skill), the recovery path is:
+After a fresh `/idea-discovery` run leaves Phase 1 done but Phase 2 not started (the failure mode that prompted this skill), the recovery path is:
 
 ```
 /wiki-enrich              # fill the paper TODOs ingest_paper left behind

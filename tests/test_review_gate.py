@@ -33,7 +33,7 @@ def test_default_codex_positive_stops_without_executor_identity(verdict: str) ->
     assert transition.identity_assurance == "not_required"
 
 
-def test_default_codex_gate_does_not_require_native_helper(tmp_path: Path) -> None:
+def test_default_codex_gate_runs_standalone(tmp_path: Path) -> None:
     standalone_gate = tmp_path / "review_gate.py"
     shutil.copy2(MODULE_PATH, standalone_gate)
 
@@ -89,182 +89,6 @@ def test_invalid_score_fails_closed(score: float) -> None:
     )
 
     assert transition.decision == "review_unavailable"
-
-
-@pytest.mark.parametrize(
-    ("executor_model", "expected_backend"),
-    [("claude-sonnet-4.5", "codex"), ("gemini-3.1-pro", "codex"), ("gpt-5.4", "manual")],
-)
-def test_copilot_positive_escalates_to_policy_finalizer(
-    executor_model: str, expected_backend: str
-) -> None:
-    availability = (
-        {"manual_available": True}
-        if expected_backend == "manual"
-        else {"codex_available": True}
-    )
-    transition = review_gate.evaluate_transition(
-        round_backend="copilot",
-        score=8,
-        verdict="ready",
-        executor_model=executor_model,
-        **availability,
-    )
-
-    assert transition.decision == "escalate"
-    assert transition.next_backend == expected_backend
-    assert transition.requires_external_acquittal is True
-    assert transition.identity_assurance == "caller_declared"
-
-
-def test_copilot_positive_fails_closed_for_unknown_executor() -> None:
-    transition = review_gate.evaluate_transition(
-        round_backend="copilot",
-        score=8,
-        verdict="ready",
-        executor_model="mystery-model",
-    )
-
-    assert transition.decision == "review_unavailable"
-
-
-def test_copilot_positive_fails_closed_when_no_finalizer_is_confirmed() -> None:
-    transition = review_gate.evaluate_transition(
-        round_backend="copilot",
-        score=8,
-        verdict="ready",
-        executor_model="claude-sonnet-4.5",
-    )
-
-    assert transition.decision == "review_unavailable"
-
-
-def test_non_openai_copilot_route_falls_back_to_manual_when_codex_is_unavailable() -> None:
-    transition = review_gate.evaluate_transition(
-        round_backend="copilot",
-        score=8,
-        verdict="ready",
-        executor_model="claude-sonnet-4.5",
-        codex_available=False,
-        manual_available=True,
-    )
-
-    assert transition.decision == "escalate"
-    assert transition.next_backend == "manual"
-
-
-def test_openai_copilot_route_fails_when_manual_is_unavailable() -> None:
-    transition = review_gate.evaluate_transition(
-        round_backend="copilot",
-        score=8,
-        verdict="ready",
-        executor_model="gpt-5.4",
-        manual_available=False,
-    )
-
-    assert transition.decision == "review_unavailable"
-
-
-def test_copilot_cannot_resume_after_finalizer_obligation_is_set() -> None:
-    transition = review_gate.evaluate_transition(
-        round_backend="copilot",
-        score=5,
-        verdict="not ready",
-        requires_external_acquittal=True,
-        executor_model="claude-sonnet-4.5",
-    )
-
-    assert transition.decision == "review_unavailable"
-
-
-def test_copilot_negative_stays_on_copilot() -> None:
-    transition = review_gate.evaluate_transition(
-        round_backend="copilot",
-        score=5,
-        verdict="not ready",
-        executor_model="claude-sonnet-4.5",
-    )
-
-    assert transition.decision == "continue"
-    assert transition.next_backend == "copilot"
-    assert transition.requires_external_acquittal is False
-
-
-def _native_evidence(*, score: float = 8, verdict: str = "ready"):
-    return review_gate.NativeEvidence(
-        evidence_id="cne_test",
-        executor_model="claude-sonnet-4.6",
-        reviewer_model="gpt-5.5",
-        score=score,
-        verdict=verdict,
-    )
-
-
-def test_native_copilot_positive_stops_without_external_finalizer() -> None:
-    transition = review_gate.evaluate_transition(
-        round_backend="copilot-native",
-        score=8,
-        verdict="ready",
-        native_evidence=_native_evidence(),
-    )
-
-    assert transition.decision == "stop"
-    assert transition.requires_external_acquittal is False
-    assert transition.identity_assurance == "host_event_verified"
-
-
-def test_native_copilot_negative_continues_on_native_backend() -> None:
-    transition = review_gate.evaluate_transition(
-        round_backend="copilot-native",
-        score=5,
-        verdict="not ready",
-        native_evidence=_native_evidence(score=5, verdict="not ready"),
-    )
-
-    assert transition.decision == "continue"
-    assert transition.next_backend == "copilot-native"
-    assert transition.identity_assurance == "host_event_verified"
-
-
-def test_native_copilot_missing_evidence_fails_closed() -> None:
-    transition = review_gate.evaluate_transition(
-        round_backend="copilot-native",
-        score=8,
-        verdict="ready",
-    )
-
-    assert transition.decision == "review_unavailable"
-    assert transition.identity_assurance == "unverified"
-
-
-def test_native_evidence_cannot_be_attached_to_another_backend() -> None:
-    transition = review_gate.evaluate_transition(
-        round_backend="codex",
-        score=8,
-        verdict="ready",
-        native_evidence=_native_evidence(),
-    )
-
-    assert transition.decision == "review_unavailable"
-    assert transition.identity_assurance == "failed"
-
-
-@pytest.mark.parametrize(
-    ("score", "verdict"),
-    [(7, "ready"), (8, "almost"), (8, "not ready")],
-)
-def test_native_copilot_declared_assessment_must_match_bound_response(
-    score: float, verdict: str
-) -> None:
-    transition = review_gate.evaluate_transition(
-        round_backend="copilot-native",
-        score=score,
-        verdict=verdict,
-        native_evidence=_native_evidence(),
-    )
-
-    assert transition.decision == "review_unavailable"
-    assert transition.identity_assurance == "failed"
 
 
 @pytest.mark.parametrize(
@@ -423,7 +247,7 @@ def test_failed_or_incomplete_review_is_unavailable_even_when_negative(
 
 @pytest.mark.parametrize(("backend", "reviewer"), NEW_REVIEWERS)
 @pytest.mark.parametrize("verdict", ["ready", "not ready"])
-def test_new_routes_cannot_discharge_a_copilot_finalizer_obligation(
+def test_new_routes_cannot_discharge_an_external_acquittal_obligation(
     backend: str, reviewer: str, verdict: str,
 ) -> None:
     result = _reported_review(backend, reviewer, verdict=verdict, requires_external_acquittal=True)

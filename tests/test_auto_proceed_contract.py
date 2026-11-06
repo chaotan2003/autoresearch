@@ -1,4 +1,9 @@
-"""Static contract guards for non-blocking AUTO_PROCEED checkpoints."""
+"""Static contract guards for non-blocking AUTO_PROCEED checkpoints.
+
+`/idea-discovery` is the surviving workflow that resolves `AUTO_PROCEED` once
+and then chains nested sub-skills, so it carries the contract the retired
+end-to-end orchestrator used to carry.
+"""
 
 from __future__ import annotations
 
@@ -7,10 +12,6 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-PIPELINE_SKILLS = (
-    REPO_ROOT / "skills" / "research-pipeline" / "SKILL.md",
-    REPO_ROOT / "skills" / "skills-codex" / "research-pipeline" / "SKILL.md",
-)
 IDEA_SKILLS = (
     REPO_ROOT / "skills" / "idea-discovery" / "SKILL.md",
     REPO_ROOT / "skills" / "skills-codex" / "idea-discovery" / "SKILL.md",
@@ -20,13 +21,30 @@ IDEA_SKILLS = (
     / "idea-discovery"
     / "SKILL.md",
 )
-AUTO_PROCEED_SKILLS = PIPELINE_SKILLS + IDEA_SKILLS
+AUTO_PROCEED_SKILLS = IDEA_SKILLS
 
 TRUE_BRANCH = re.compile(
     r"\*\*(?:If|When) `AUTO_PROCEED=true` \(non-blocking\):\*\*"
     r"(?P<body>.*?)"
     r"(?=\*\*(?:If|When) `AUTO_PROCEED=false` \(blocking\):\*\*)",
     re.DOTALL,
+)
+
+# The mode is resolved exactly once, before Phase 0, and governs the whole
+# chain — that is what makes the nested workflows inherit it.
+MODE_RESOLUTION = re.compile(
+    r"Resolve `AUTO_PROCEED` once from `\$ARGUMENTS` before Phase \d+ and keep"
+    r"\s+that mode\s+for the entire workflow\."
+)
+
+# Every nested sub-skill invocation /idea-discovery emits, in phase order. The
+# quoted-argument forms pin the actual invocation, not the pipeline diagram.
+NESTED_INVOCATIONS = (
+    '/research-lit "$ARGUMENTS"',
+    '/idea-creator "$ARGUMENTS"',
+    '/novelty-check "',
+    '/research-review "',
+    '/research-refine-pipeline "',
 )
 
 
@@ -50,10 +68,9 @@ def test_all_auto_proceed_variants_define_same_turn_checkpoint_semantics() -> No
 
 
 def test_auto_proceed_branches_report_a_choice_without_asking() -> None:
-    expected_branches = {**{path: 1 for path in PIPELINE_SKILLS}, **{path: 3 for path in IDEA_SKILLS}}
-    for path, expected in expected_branches.items():
+    for path in IDEA_SKILLS:
         branches = [match.group("body") for match in TRUE_BRANCH.finditer(read(path))]
-        assert len(branches) == expected, path
+        assert len(branches) == 3, path
         for branch in branches:
             assert "AUTO_PROCEED:" in branch, path
             assert "?" not in branch, path
@@ -73,26 +90,31 @@ def test_silence_timeout_antipattern_is_absent() -> None:
             assert phrase not in text, f"{path}: stale AUTO_PROCEED instruction: {phrase}"
 
 
-def test_research_pipeline_passes_resolved_mode_to_nested_workflows() -> None:
-    idea_invocation = '/idea-discovery "$ARGUMENTS" — AUTO_PROCEED: $AUTO_PROCEED'
-    paper_invocations = (
-        '/paper-writing "NARRATIVE_REPORT.md" — venue: <VENUE>, AUTO_PROCEED: $AUTO_PROCEED',
-        '/paper-writing "NARRATIVE_REPORT.md" — venue: [VENUE], AUTO_PROCEED: $AUTO_PROCEED',
-        '/paper-writing "NARRATIVE_REPORT.md" — venue: $VENUE, AUTO_PROCEED: $AUTO_PROCEED',
-    )
-    for path in PIPELINE_SKILLS:
+def test_idea_discovery_resolves_mode_once_before_nesting_workflows() -> None:
+    for path in IDEA_SKILLS:
         text = read(path)
-        assert idea_invocation in text, path
-        for invocation in paper_invocations:
-            assert invocation in text, (path, invocation)
-        assert '/paper-writing "NARRATIVE_REPORT.md — venue: [VENUE]' not in text, path
+        resolutions = list(MODE_RESOLUTION.finditer(text))
+        assert len(resolutions) == 1, (
+            f"{path}: `AUTO_PROCEED` must be resolved exactly once, before the "
+            "first phase, and govern the entire workflow"
+        )
+        resolution_at = resolutions[0].start()
+        for invocation in NESTED_INVOCATIONS:
+            at = text.find(invocation)
+            assert at != -1, (path, invocation)
+            assert at > resolution_at, (
+                f"{path}: {invocation.strip()} is invoked before AUTO_PROCEED is "
+                "resolved, so the nested workflow cannot inherit the resolved mode"
+            )
+        assert "$AUTO_PROCEED" not in text, (
+            f"{path}: the unresolved `$AUTO_PROCEED` placeholder leaked into an "
+            "invocation; pass the resolved mode instead"
+        )
 
 
 def test_user_docs_match_same_turn_auto_proceed_contract() -> None:
     docs = (
         REPO_ROOT / "README.md",
-        REPO_ROOT / "docs" / "CUSTOMIZATION.md",
-        REPO_ROOT / "docs" / "CUSTOMIZATION_CN.md",
     )
     stale_phrases = (
         "if user doesn't respond",

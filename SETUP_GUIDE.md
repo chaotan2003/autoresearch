@@ -73,9 +73,9 @@ cd ~/your-paper-project
 bash ~/aris_repo/tools/install_aris.sh
 
 # Install only what you need (selective install):
-bash ~/aris_repo/tools/install_aris.sh --list-groups                  # show the 10 skill groups
-bash ~/aris_repo/tools/install_aris.sh --groups paper-core,lit-search # install by group
-bash ~/aris_repo/tools/install_aris.sh --skills paper-writing         # by skill (hard deps auto-included)
+bash ~/aris_repo/tools/install_aris.sh --list-groups                  # show the 6 skill groups
+bash ~/aris_repo/tools/install_aris.sh --groups ideation,experiments  # install by group
+bash ~/aris_repo/tools/install_aris.sh --skills idea-discovery        # by skill (hard deps auto-included)
 # A fresh install with no selection flags (run in a terminal) opens a checkbox picker (Space toggles, group rows toggle all)
 
 # Other useful flags:
@@ -130,8 +130,7 @@ Depending on your model combination, you may need to register additional MCP ser
 | `codex` | Claude Code | Default setup (Claude + GPT review) | `claude mcp add codex -s user -- python3 "$HOME/aris_repo/mcp-servers/codex-exec/server.py"` (already done in Step 3.1) |
 | `claude-review` | Codex CLI | Using Codex as executor with Claude as reviewer | `codex mcp add claude-review -- python3 ~/.codex/mcp-servers/claude-review/server.py` (see `mcp-servers/claude-review/README.md`) |
 | `gemini-review` | Codex CLI | Using Codex as executor with Gemini as reviewer | `codex mcp add gemini-review --env GEMINI_REVIEW_BACKEND=api -- python3 ~/.codex/mcp-servers/gemini-review/server.py` (see `mcp-servers/gemini-review/README.md`) |
-| `llm-chat` | Claude Code | Using arbitrary OpenAI-compatible API as reviewer | `claude mcp add llm-chat -s user -- python3 /path/to/aris_repo/mcp-servers/llm-chat/server.py` (see `docs/LLM_API_MIX_MATCH_GUIDE.md`) |
-| `minimax-chat` | Claude Code | Using MiniMax as reviewer (no OpenAI key needed) | See `docs/MINIMAX_MCP_GUIDE.md` |
+| `llm-chat` | Claude Code | Using arbitrary OpenAI-compatible API as reviewer | `claude mcp add llm-chat -s user -- python3 /path/to/aris_repo/mcp-servers/llm-chat/server.py` (see [`mcp-servers/llm-chat/README.md`](mcp-servers/llm-chat/README.md)) |
 | `manual-review` | Claude Code | Human-in-the-loop manual review | `claude mcp add manual-review -s user -- python3 /path/to/aris_repo/mcp-servers/manual-review/server.py` |
 | `feishu-bridge` | — (standalone HTTP service) | Receiving notifications via Feishu/飞书 | See `mcp-servers/feishu-bridge/` |
 | `codex-image2` | Claude Code | Enhanced image processing in Codex | See `mcp-servers/codex-image2/` |
@@ -270,10 +269,5 @@ You're now ready to use ARIS research workflows:
 claude
 > /idea-discovery "your research direction"          # Workflow 1 — be specific! not "NLP" but "factorized gap in discrete diffusion LMs"
 > /experiment-bridge                                 # Workflow 1.5 — have a plan? implement + deploy + collect results
-> /auto-review-loop "your paper topic or scope"      # Workflow 2: review → fix → re-review overnight
-> /paper-writing "NARRATIVE_REPORT.md"               # Workflow 3: narrative → polished PDF
-> /rebuttal "paper/ + reviews" — venue: ICML          # Workflow 4: parse reviews → draft rebuttal → follow-up
-> /resubmit-pipeline "paper/" — venue: NeurIPS        # Workflow 5: port to new venue (text-only, no new experiments)
-> /paper-talk "paper/" — venue: ICLR                  # Workflow 6: paper → Beamer + PPTX talk + speaker notes + assurance audits
-> /research-pipeline "your research direction"       # Full pipeline: W1 → 1.5 → 2 → handoff; default stops at NARRATIVE_REPORT.md. Add `— auto_write: true, venue: ICLR` to chain W3 paper writing too
+> /auto-review-loop "your results or scope"          # Workflow 2: review → fix → re-review until positive
 ```

@@ -58,7 +58,7 @@ When calling the reviewer, branch on REVIEWER_BACKEND:
 Prompt fidelity: the manual prompt must be exactly the same text that Codex would receive.
 Review tracing applies equally to both backends.
 
-- AUDIT_DOC: `PROOF_AUDIT.md` at the paper directory root, alongside `main.tex` (cumulative log; when invoked via `/paper-writing`, this is `paper/PROOF_AUDIT.md`)
+- AUDIT_DOC: `PROOF_AUDIT.md` at the paper directory root, alongside `main.tex` (cumulative log; `paper/PROOF_AUDIT.md` when a paper directory exists)
 - REPORT_TEX: `proof_audit_report.tex` (formal before/after PDF)
 - STATE_FILE: `PROOF_CHECK_STATE.json` (for recovery)
 - SKELETON_DOC: `PROOF_SKELETON.md` (micro-claim inventory)
@@ -675,7 +675,7 @@ The default `minimal_fix` prose is intentionally short — it suits the common c
 - The Phase 1 reviewer prompt is augmented with the deep-fix and algebra-sanity blocks; nothing in the original mandatory checklist or output format is removed.
 - `PROOF_AUDIT.json` `details` gains a sibling field `deep_fix_plans` (parallel to `details.issues`); see "Submission Artifact Emission" below.
 - The top-level `verdict`, `reason_code`, and `summary` are **unchanged in shape and decision rule**: deep-fix output is advisory tooling for the executor, not a verdict-altering signal.
-- Verifier gates and downstream skills (`paper-writing` Phase 6, `verify_paper_audits.sh`) MUST treat absence of `deep_fix_plans` as the only valid default state and MUST NOT block on its presence or content.
+- Downstream consumers MUST treat absence of `deep_fix_plans` as the only valid default state and MUST NOT block on its presence or content.
 
 ### When opt-in is appropriate
 - The executor intends to apply the fix in the same session and wants to skip a follow-up "give me a concrete patch" thread.
@@ -746,13 +746,11 @@ When `--restatement-check` is set, `PROOF_AUDIT.json` additionally carries `deta
 ## Submission Artifact Emission
 
 This skill **always** writes `PROOF_AUDIT.json` at the paper directory
-root (i.e. `paper/PROOF_AUDIT.json` when invoked from `/paper-writing`
-with paper-dir `paper/`; `<your-paper-dir>/PROOF_AUDIT.json` when invoked
-standalone), regardless of caller or whether the paper contains theorems.
+root (i.e. `<paper-dir>/PROOF_AUDIT.json`; `paper/PROOF_AUDIT.json` when the
+paper directory is `paper/`), regardless of caller or whether the paper contains theorems.
 A paper with no `\begin{theorem}` / `\begin{lemma}` / `\begin{proof}` emits
-verdict `NOT_APPLICABLE`; silent skip is forbidden. `paper-writing`
-Phase 6 and `verify_paper_audits.sh` both rely on this artifact
-existing at `<paper-dir>/PROOF_AUDIT.json`.
+verdict `NOT_APPLICABLE`; silent skip is forbidden. Downstream consumers
+read this artifact from `<paper-dir>/PROOF_AUDIT.json`.
 
 The artifact conforms to the schema in `shared-references/assurance-contract.md`:
 
@@ -820,7 +818,7 @@ Field semantics:
 - When the flag is set and reviewer returns well-formed plans, `deep_fix_status` is `"ok"` and `deep_fix_plans` mirrors `details.issues` one-to-one (each plan referenced by `issue_id`); `algebra_sanity` is present only for issues invoking Schur / Young / Cauchy-Schwarz / Hölder / quadratic-form / operator-norm / power-counting steps.
 - When the flag is set but reviewer output is malformed or truncated, `deep_fix_status` is `"unavailable"` and `deep_fix_plans` is `[]`. Downstream consumers MUST treat `"unavailable"` identically to the field being absent: not blocking.
 - Downstream consumers MUST treat absence of either field as the only valid default state and MUST NOT raise on missing.
-- `deep_fix_plans` is advisory tooling for the executor; `verify_paper_audits.sh` and `paper-writing` Phase 6 do not block on its content or shape.
+- `deep_fix_plans` is advisory tooling for the executor; no downstream consumer blocks on its content or shape.
 
 ### Optional: `details.restatement_drift` (only when `--restatement-check` is set)
 
@@ -884,9 +882,8 @@ Every **top-level** `/proof-checker` invocation starts a fresh reviewer thread. 
 
 Do not accept prior audit outputs (PAPER_CLAIM_AUDIT, CITATION_AUDIT, EXPERIMENT_LOG) as input across separate invocations — the cross-run freshness is what preserves reviewer independence per `shared-references/reviewer-independence.md`.
 
-This skill never blocks by itself; `paper-writing` Phase 6 plus the
-verifier decide whether the verdict blocks finalization based on the
-`assurance` level.
+This skill never blocks by itself; the calling orchestration decides
+whether the verdict blocks finalization based on the `assurance` level.
 
 ## Example Invocations
 

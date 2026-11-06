@@ -20,7 +20,7 @@
 - 不重复打包模板和资源目录
 - 不替代基础的 `skills/skills-codex/` 安装
 
-当前覆盖的技能：
+当前覆盖的技能（7 个）：
 
 - `idea-creator`
 - `idea-discovery`
@@ -29,66 +29,18 @@
 - `novelty-check`
 - `research-refine`
 - `auto-review-loop`
-- `grant-proposal`
-- `paper-plan`
-- `paper-figure`
-- `paper-poster-html`
-- `paper-slides`
-- `paper-write`
-- `paper-writing`
-- `auto-paper-improvement-loop`
-
-## 核心 8 个 vs 完整 15 个
-
-为了避免误解，这个 overlay 有两种常用描述方式：
-
-- **核心 8 个**：和早先 Claude-review 路线一一对齐的 reviewer-heavy overlay 核心集合
-- **完整 15 个**：当前这个仓库里实际已经切到 Gemini reviewer 的 reviewer-aware Codex 技能面
-
-其中 **核心 8 个** 是：
-
-- `research-review`
-- `novelty-check`
-- `research-refine`
-- `auto-review-loop`
-- `paper-plan`
-- `paper-figure`
-- `paper-write`
-- `auto-paper-improvement-loop`
-
-额外扩展的 **7 个** reviewer-aware 入口是：
-
-- `idea-creator`
-- `idea-discovery`
-- `idea-discovery-robot`
-- `grant-proposal`
-- `paper-writing`
-- `paper-slides`
-- `paper-poster-html`
-
-所以和 Claude overlay 对比时，最准确的一句话是：
-
-> Gemini 这条路保持了相同的核心 8-skill reviewer overlay 形状，但在当前仓库里把实际 reviewer 入口扩展到了 15 个。
 
 ## 直接消费者 vs wrapper
 
-- **12 个直接消费者**：自己直接调用 `mcp__gemini-review__review_start` / `review_reply_start` / `review_status`
+- **5 个直接消费者**：自己直接调用 `mcp__gemini-review__review_start` / `review_reply_start` / `review_status`
   - `research-review`
   - `novelty-check`
   - `research-refine`
   - `auto-review-loop`
-  - `paper-plan`
-  - `paper-figure`
-  - `paper-write`
-  - `auto-paper-improvement-loop`
   - `idea-creator`
-  - `grant-proposal`
-  - `paper-slides`
-  - `paper-poster-html`
-- **3 个 wrapper**：主要串联下游 reviewer-aware skill，并传递 `REVIEWER_MODEL=gemini-review`
+- **2 个 wrapper**：主要串联下游 reviewer-aware skill，并传递 `REVIEWER_MODEL=gemini-review`
   - `idea-discovery`
   - `idea-discovery-robot`
-  - `paper-writing`
 
 ## 安装方式
 
@@ -151,7 +103,7 @@ codex mcp add gemini-review --env GEMINI_REVIEW_BACKEND=api --env GEMINI_REVIEW_
 
 这套 overlay 做了两类验证：
 
-- **覆盖检查**：本包里的 `15` 个预定义 reviewer-aware skill override 都核对过，确认目标都是 `gemini-review`
+- **覆盖检查**：本包里的 `7` 个预定义 reviewer-aware skill override 都核对过，确认目标都是 `gemini-review`
 - **运行时检查**：
   - 底层 bridge 已完成同步、异步、thread 续聊、本地图像多模态审查等测试
   - 在一个私有、未公开的研究仓库上，代表性的 Codex 实跑已经确认：真实 skill 执行可以进入 Gemini reviewer 路径，覆盖研究审稿、idea 生成、论文规划这几类工作流

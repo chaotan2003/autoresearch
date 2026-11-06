@@ -9,7 +9,7 @@ for Codex's install layout (the helper may live under
 
 ```bash
 ARIS_REPO="${ARIS_REPO:-$(awk -F'\t' '$1=="repo_root"{print $2; exit}' .aris/installed-skills-codex.txt 2>/dev/null)}"
-# Global pointer file written by install_aris*/smart_update* at ~/.aris/repo
+# Global pointer file written by install_aris* at ~/.aris/repo
 # (#366) — same file the CC chain reads; covers global copy-installs with
 # no project-local manifest.
 if [ -z "${ARIS_REPO:-}" ] && [ -f "$HOME/.aris/repo" ]; then
@@ -30,7 +30,7 @@ After the chain:
 
 ```bash
 [ -n "$WIKI_SCRIPT" ] || {
-  echo "ERROR: research_wiki.py not found. Set ARIS_REPO, rerun install_aris_codex.sh/smart_update_codex.sh (refreshes ~/.aris/repo), copy to tools/, or use Codex global install." >&2
+  echo "ERROR: research_wiki.py not found. Set ARIS_REPO, rerun install_aris_codex.sh (refreshes ~/.aris/repo), copy to tools/, or use Codex global install." >&2
   exit 1
 }
 ```

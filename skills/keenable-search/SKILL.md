@@ -84,7 +84,7 @@ KEENABLE_FETCHER=".aris/tools/keenable_search.py"
 [ -f "$KEENABLE_FETCHER" ] || { [ -n "${ARIS_REPO:-}" ] && KEENABLE_FETCHER="$ARIS_REPO/tools/keenable_search.py"; }
 [ -f "$KEENABLE_FETCHER" ] || {
   echo "ERROR: keenable_search.py not resolved at .aris/tools/, tools/, \$ARIS_REPO/tools/, or via ~/.aris/repo." >&2
-  echo "       Fix: rerun bash tools/install_aris.sh or smart_update.sh (refreshes ~/.aris/repo), export ARIS_REPO, or copy the helper to tools/." >&2
+  echo "       Fix: rerun bash tools/install_aris.sh (refreshes ~/.aris/repo), export ARIS_REPO, or copy the helper to tools/." >&2
   exit 1
 }
 ```

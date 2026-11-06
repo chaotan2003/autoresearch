@@ -160,7 +160,7 @@ So:
 
 **If `should_review` is true**, fire a fresh `mcp__codex__codex` thread (NEVER `codex-reply`; pin `model: gpt-6-astra` + `config: {"model_reasoning_effort": "xhigh"}` per `../shared-references/reviewer-routing.md`) with the prompt below. The reviewer reads the source MD + generated HTML directly; it does **not** see this skill's intermediate state.
 
-**Scope of review (narrow on purpose).** The HTML reviewer audits **render fidelity / safety / structure only** — not claim truthfulness. Claim audit belongs upstream (`/paper-claim-audit`, `/research-review`, `/result-to-claim`). Specifically the reviewer checks:
+**Scope of review (narrow on purpose).** The HTML reviewer audits **render fidelity / safety / structure only** — not claim truthfulness. Claim audit belongs upstream (`/research-review`, `/result-to-claim`). Specifically the reviewer checks:
 
 1. **Information fidelity** — every section, claim, table, code block, list, math snippet, sidecar payload is present in the HTML (no silent drop)
 2. **Structural integrity** — heading hierarchy / nested lists / table cells / code fences / `<details>` blocks / math delimiters survive parsing
@@ -288,13 +288,8 @@ Verdict rules:
 |---|---|---|---|
 | `/idea-discovery` | `idea-stage/IDEA_REPORT.md` | `--no-review` | Interim; source went through novelty + cross-model review already |
 | `/auto-review-loop` | `review-stage/AUTO_REVIEW.md` | `--no-review` | Per-round log; the loop itself is the cross-model review |
-| `/research-pipeline` | `NARRATIVE_REPORT.md` | `--no-review` | Internal Stage 5 handoff to `/paper-writing`; not reviewer-facing — upstream Stage 4 auto-review-loop already gated the claims |
 | `/kill-argument` | `<paper-dir>/KILL_ARGUMENT.md` | full gate | Audit-class artifact; matches skill's own cross-model invariant |
-| `/paper-claim-audit` | `paper/PAPER_CLAIM_AUDIT.md` | full gate | Audit-class artifact |
-| `/citation-audit` | `paper/CITATION_AUDIT.md` | full gate | Audit-class artifact |
 | `/proof-checker` | `PROOF_AUDIT.md` | full gate | Audit-class artifact |
-| `/rebuttal` | `REBUTTAL_DRAFT_rich.md` | full gate | Pre-submission deliverable |
-| `/paper-writing` | (no auto-HTML) | n/a | The final reader artifact is PDF |
 | `/research-wiki` | `research-wiki/index.html` dashboard | future | Phase 2.1 — dashboard template work, not in this round |
 
 `--no-review` for interim reports is intentional: the source MD has already been reviewed by the producing skill's own cross-model gate, and the HTML render only converts structure — it doesn't add new claims. Full review at every checkpoint would multiply Codex calls per pipeline by 4-6×.
@@ -314,14 +309,14 @@ The default templates are derived from the user's own academic-newspaper tutoria
 
 ## External alternatives (for richer surfaces)
 
-For deck / poster / Xiaohongshu card / tweet card / data report style outputs, point users to **[html-anything](https://github.com/nexu-io/html-anything)** (Apache-2.0, 3000⭐ at time of writing). It ships 75 SKILL.md templates across 9 surfaces and detects 8 coding-agent CLIs (including Claude Code, Codex, Copilot). ARIS does *not* depend on it — `/render-html` covers ARIS-native artifacts; html-anything is the recommended path for richer publishing surfaces.
+For deck / poster / Xiaohongshu card / tweet card / data report style outputs, point users to **[html-anything](https://github.com/nexu-io/html-anything)** (Apache-2.0, 3000⭐ at time of writing). It ships 75 SKILL.md templates across 9 surfaces and detects 8 coding-agent CLIs (including Claude Code, Codex). ARIS does *not* depend on it — `/render-html` covers ARIS-native artifacts; html-anything is the recommended path for richer publishing surfaces.
 
 ## Key rules
 
 - **Do not auto-render every Markdown file.** Only artifacts on the whitelist above. File proliferation is the main anti-pattern.
 - **Do not hand-edit the generated HTML.** Edit the source, then re-render. The embedded SHA256 in the HTML meta tells you if the source has changed since render.
-- **academic-template HTML is a reviewed artifact by default**, not raw output. Cross-model Codex review (fresh thread) gates the academic deliverables — the same way `/proof-checker`, `/paper-claim-audit`, `/citation-audit`, `/kill-argument` gate their respective products. `--no-review` is appropriate for **interim auto-emits** (e.g., `idea-stage/IDEA_REPORT.html`, per-round `review-stage/AUTO_REVIEW.html`) where the source MD has already passed an upstream cross-model gate — the HTML render is then a structural conversion, not a new claim audit. For **shipped / reviewer-facing / audit-class** outputs, keep the full gate.
-- **The reviewer audits rendering, not research.** Claim truthfulness is owned upstream by `/paper-claim-audit`, `/result-to-claim`, `/research-review`. The HTML reviewer asks: "did the renderer faithfully + safely convert this source?" — nothing more.
+- **academic-template HTML is a reviewed artifact by default**, not raw output. Cross-model Codex review (fresh thread) gates the academic deliverables — the same way `/proof-checker` and `/kill-argument` gate their respective products. `--no-review` is appropriate for **interim auto-emits** (e.g., `idea-stage/IDEA_REPORT.html`, per-round `review-stage/AUTO_REVIEW.html`) where the source MD has already passed an upstream cross-model gate — the HTML render is then a structural conversion, not a new claim audit. For **shipped / reviewer-facing / audit-class** outputs, keep the full gate.
+- **The reviewer audits rendering, not research.** Claim truthfulness is owned upstream by `/result-to-claim`, `/research-review`. The HTML reviewer asks: "did the renderer faithfully + safely convert this source?" — nothing more.
 - **CDN dependency is opt-out, not opt-in.** Most users have internet; `--offline` is for air-gapped runs / archival.
 - **The default style is academic-newspaper, not marketing-flashy.** Match the existing ARIS tonal voice. If you want decks/posters/social cards, point users to html-anything.
 - **Pure stdlib only.** Adding a `pip install` dependency to `render_html.py` requires an explicit decision — the helper currently has none. MCP calls live in the skill orchestrator, never in the helper script.

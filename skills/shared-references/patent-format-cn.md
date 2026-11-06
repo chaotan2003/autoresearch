@@ -6,7 +6,6 @@ Use this reference when drafting Chinese patent applications for filing with CNI
 
 - Read when `JURISDICTION = "CN"` or `JURISDICTION = "ALL"`
 - Read before writing claims in Chinese format
-- Read during `/jurisdiction-format` for CN output
 - Read when choosing between invention patent (发明专利) and utility model (实用新型)
 
 ## Applicable Law and Regulations

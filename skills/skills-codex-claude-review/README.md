@@ -27,10 +27,6 @@ Current overrides:
 - `novelty-check`
 - `research-refine`
 - `auto-review-loop`
-- `paper-plan`
-- `paper-figure`
-- `paper-write`
-- `auto-paper-improvement-loop`
 
 ## Install
 

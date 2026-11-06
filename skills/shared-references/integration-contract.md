@@ -57,9 +57,9 @@ because the helper may sit at any of:
 - `<project>/tools/<helper>` — manual copy or running from inside the ARIS repo
 - `$ARIS_REPO/tools/<helper>` — env var or auto-resolved from the install manifest
 - `$ARIS_REPO/tools/<helper>` via `$HOME/.aris/repo` — global pointer file
-  (one line, absolute repo path) written by `install_aris*.{sh,ps1}` and
-  `smart_update*.{sh,ps1}` at install/update time; the only layer that
-  resolves for a global copy-install (`~/.claude/skills`) with no
+  (one line, absolute repo path) written by `install_aris*.sh` at
+  install time; the only layer that
+  resolves for a global install (`~/.claude/skills`) with no
   project-local `.aris/` manifest (#366)
 
 Every caller — including those primarily exercised from inside the
@@ -120,7 +120,7 @@ verifiers whose exit code gates submission readiness (e.g.
 [ -n "$AUDIT_VERIFIER" ] || {
   echo "ERROR: verify_paper_audits.sh not resolved at .aris/tools/, tools/, \$ARIS_REPO/tools/, or via ~/.aris/repo." >&2
   echo "       assurance=submission requires the verifier; aborting Final Report." >&2
-  echo "       Fix: rerun bash tools/install_aris.sh (or smart_update.sh) to refresh ~/.aris/repo, or export ARIS_REPO." >&2
+  echo "       Fix: rerun bash tools/install_aris.sh to refresh ~/.aris/repo, or export ARIS_REPO." >&2
   exit 1
 }
 ```
@@ -133,7 +133,7 @@ gets produced, only the wiki side-effect is missed).
 ```bash
 [ -n "$WIKI_SCRIPT" ] || {
   echo "WARN: research_wiki.py not resolved; primary output unaffected, wiki side-effect skipped." >&2
-  echo "      Fix: rerun bash tools/install_aris.sh or smart_update.sh (refreshes ~/.aris/repo), export ARIS_REPO, or copy the helper to tools/." >&2
+  echo "      Fix: rerun bash tools/install_aris.sh (refreshes ~/.aris/repo), export ARIS_REPO, or copy the helper to tools/." >&2
 }
 [ -n "$WIKI_SCRIPT" ] && python3 "$WIKI_SCRIPT" ingest_paper research-wiki/ --arxiv-id "$id"
 ```
@@ -311,8 +311,7 @@ Every helper invoked from any SKILL.md (single-skill or shared
 across skills) is classified below so that downstream SKILLs in
 Phase 1.2-1.7 do not have to guess. Pure developer utilities that
 are never invoked from a SKILL.md — installers
-(`install_aris.sh`, `install_aris_codex.sh`), update scripts
-(`smart_update.sh`, `smart_update_codex.sh`), manual setup
+(`install_aris.sh`, `install_aris_codex.sh`), manual setup
 (`overleaf_setup.sh`), generators
 (`convert_skills_to_llm_chat.py`, `generate_codex_claude_review_overrides.py`),
 the `meta_opt/` hook scripts, and `watchdog.py` — are out of scope.
@@ -322,7 +321,6 @@ here first.
 | Helper (canonical name) | Policy | Rationale |
 |---|---|---|
 | `verify_paper_audits.sh` | A (gate) | Exit code is the source of truth for submission readiness |
-| `copilot_native_evidence.py` | A (gate) | Binds `/auto-review-loop` to the current Copilot root session and revalidates the native `rubber-duck` lifecycle, actual model pair, and raw response; without verified evidence, a native verdict cannot stop the loop |
 | `review_gate.py` | A (gate) | Authoritative stop/continue/escalate transition table for `/auto-review-loop`; missing helper means the loop cannot safely decide termination |
 | `save_trace.sh` | C (forensic) | Trace artifacts are load-bearing for audit traceability and reviewer-independence audit |
 | `research_wiki.py ingest_paper` (caller skills) | B (side-effect) | Primary output (idea ranking, paper summary) is delivered without wiki ingestion |
@@ -330,18 +328,12 @@ here first.
 | `verify_wiki_coverage.sh` | E (diagnostic) | Reports coverage gaps; not load-bearing on any research outcome |
 | `verify_papers.py` | D1 (primary + fallback cascade) | Filters candidate papers via arXiv/CrossRef/S2 cross-checks; when unresolved **or** invocation fails, callers emit a degraded `verified_papers.json` tagging every candidate `status=unverified, method=none` with explicit WARN |
 | `arxiv_fetch.py`, `semantic_scholar_fetch.py`, `deepxiv_fetch.py`, `exa_search.py`, `keenable_search.py`, `firecrawl_search.py`, `openalex_fetch.py` | D2 (multi-source aggregate) when SKILL queries multiple sources (e.g. `/research-lit`); D1 (cascade) when a single source suffices | Each fetcher is one paper-discovery source; SKILLs aggregate or cascade across resolved sources and record which contributed |
-| `extract_paper_style.py` | A when activation predicate `literal "— style-ref:" or equivalent in $ARGUMENTS` is true; not invoked otherwise | If the user asked for style transfer and the helper is unresolved, the SKILL cannot satisfy the request |
-| `paper_illustration_image2.py` (`preflight`, `finalize`, `verify`) | A (skill-local gate) | Image2 finalization cannot complete without these checks; verify exits 1 on missing artifacts and that is a skill-local gate (the parent paper-writing workflow may still continue with the alternate illustration path). **Phase 3.2 move**: canonical location is `skills/paper-illustration-image2/scripts/paper_illustration_image2.py`; `tools/paper_illustration_image2.py` retained as `os.execv` shim for legacy resolver layers. |
-| `figure_renderer.py` | A (skill-local gate, single-skill) | `figure-spec` cannot produce vector SVG output without the renderer. **Phase 3.1 move**: canonical location is `skills/figure-spec/scripts/figure_renderer.py`; `tools/figure_renderer.py` retained as `os.execv` shim for legacy resolver layers. |
 | `experiment_queue/queue_manager.py`, `experiment_queue/build_manifest.py` | A (skill-local gate, single-skill) | `/experiment-queue` cannot operate without these; canonical resolver applies the same chain. **Phase 3.3 move**: canonical location is `skills/experiment-queue/scripts/{queue_manager.py, build_manifest.py}`; both `tools/experiment_queue/*.py` retained as `os.execv` shims for legacy resolver layers. |
-| `overleaf_audit.sh` | E (diagnostic) | Reports overleaf sync drift; surfaces gaps but does not gate the parent workflow |
 | `evidence_check.py` (in `/result-to-claim`, `/paper-claim-audit`) | B (side-effect) | Deterministic pre-check that downgrades hallucinated-evidence claims before the Codex jury; if unresolved the jury still runs (warn-and-skip). A deterministic gate DRIVES, it does not ACQUIT — `verified` means the cited number exists, not that it supports the claim |
 | `capture_filter.py` (in `/research-wiki` capture, `/meta-optimize` Step 3) | B (side-effect) | Anti-self-poisoning screen on durable captures; if unresolved the capture proceeds (the screen is advisory, and a passing screen is never an ACCEPT — the cross-model jury still judges) |
 | `provenance.py` (in `/meta-apply`; `assert_cross_family`/`stamp`) | A (gate) | The landing acquittal: if unresolved, `/meta-apply` cannot verify author≠reviewer family and MUST refuse to land (fail-closed). `stamp()` itself raises on same-family, so an unresolved or same-family case blocks the corpus mutation |
 | `run_state.py` (in `/research-pipeline`) | B (side-effect) | Resumability is a convenience; the pipeline still runs end-to-end without it (warn-and-skip, never block). Predicate = `RESUMABLE` / `— resume <run_id>` set |
-| `forensics_gate.py` (in `/integrity-forensics`, `/paper-writing` Phase 5.9/6.0, `/resubmit-pipeline`) | A (gate) | Typed policy gate + append-only obligations ledger for the Anti-Autoresearch launcher; at `assurance: submission` an unresolved helper blocks the Final Report / Overleaf push (never improvise the gate). `fresh` is the one-command downstream preflight; exit code is the source of truth |
 | `iteration_log.py` (in `/research-pipeline`, `/idea-discovery`) | B (side-effect) | Stall→pivot ledger is a convenience for overnight loops; the pipeline runs without it (warn-and-skip, never block). Predicate = an overnight heartbeat is driving the loop. Mainline-only for now (Codex-mirror sync pending external-cadence mirror). |
-| `cx_verify.py` (in `/citation-crosscheck` Step 3.5) | A (gate) | The fan-out's requirement-(4) **deterministic verifier gate** (`fan-out-pattern.md`): it assigns every `MATCH`/`MINOR` that is granted without a fetch (Step 4 may still resolve an `ESCALATE` to those labels, but only on the main agent's own primary-source evidence), and it FAILS CLOSED to `ESCALATE` (→ main-agent primary-source fetch) on any differing/absent identifying field, unknown venue pair, routing flag, or `found != true`. If unresolved, the skill MUST refuse to run rather than let the agent hand-assign verdicts. A deterministic gate DRIVES, it does not ACQUIT — a `MATCH` means "two independent records concur", never "verified against the publisher of record", and the gate never emits `MISMATCH`. Ships `--selftest` (run it before trusting the gate) and `--expect <CITED_KEY_COUNT>` (coverage/empty/duplicate-join check). Owner-local under `skills/citation-crosscheck/scripts/` (Layer 0); the Codex mirror resolves the same script via the Codex hybrid chain. |
 
 When a SKILL invokes a helper not listed above, add the row here as
 part of the same commit and link the chosen policy. Inconsistency in
@@ -379,8 +371,6 @@ the first thing to get skipped.
 ```
 📋 Submission audits required before Final Report:
    [ ] 1. /proof-checker   → paper/PROOF_AUDIT.json
-   [ ] 2. /paper-claim-audit → paper/PAPER_CLAIM_AUDIT.json
-   [ ] 3. /citation-audit  → paper/CITATION_AUDIT.json
    [ ] 4. Resolve $AUDIT_VERIFIER via §2 (canonical name verify_paper_audits.sh)
           then: bash "$AUDIT_VERIFIER" paper/ --assurance submission
    [ ] 5. Block Final Report iff verifier exit code != 0
@@ -447,7 +437,6 @@ resolve actual paths via §2.
 |---|---|---|---|---|---|---|
 | Submission audits (`max`/`beast`) | `paper/.aris/assurance.txt = submission` | `verify_paper_audits.sh` + 3 audit skills emit JSON | `paper/PROOF_AUDIT.json`, `PAPER_CLAIM_AUDIT.json`, `CITATION_AUDIT.json` + `paper/.aris/audit-verifier-report.json` | Phase 6.0 pre-flight checklist | Rerun the failed audit | `verify_paper_audits.sh` (exit 1 blocks) |
 | Research wiki ingest | `research-wiki/` exists | `research_wiki.py ingest_paper` | `research-wiki/papers/<slug>.md` + `log.md` entry | Step in each paper-reading skill | `research_wiki.py sync --arxiv-ids …` | `verify_wiki_coverage.sh` (diagnostic) |
-| paper-illustration-image2 finalization | `paper_illustration_image2.py preflight --workspace <cwd>` returns `ok=true` | `paper_illustration_image2.py` (`preflight`, `finalize`, `verify`) | `figures/ai_generated/figure_final.png`, `latex_include.tex`, `review_log.json` | Step 0 checklist in `paper-illustration-image2` | `paper_illustration_image2.py finalize --workspace <cwd> --best-image <png>` | `paper_illustration_image2.py verify` (skill-local gate; exit 1 on missing artifacts blocks finalize claim, parent workflow may continue with the alternate illustration path) |
 
 When adding a new cross-skill integration, add a row to the table above
 and confirm all six columns are populated.

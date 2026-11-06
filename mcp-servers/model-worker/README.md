@@ -8,10 +8,9 @@ reviewer services remain separate.
 | Backend | CLI | Example model | Example effort |
 |---|---|---|---|
 | `antigravity` | `agy` | `gemini-4-argon-high` | `high` |
-| `grok` | `grok` | `grok-4.7` | `xhigh` |
 | `claude-code` | `claude` | `deepseek/deepseek-flash[1m]` | `max` |
 
-Omitting `effort` selects `high` for Antigravity/Claude Code and `xhigh` for Grok;
+Omitting `effort` selects `high` for Antigravity and Claude Code;
 the chosen value is saved for replies. Use a model supported by your own account
 and CLI. Backend names identify the
 execution channel: Claude Code can run DeepSeek, and Antigravity can run models
@@ -27,6 +26,22 @@ For Antigravity, copy `aris-model-worker.md` to
 `~/.gemini/config/agents/aris-model-worker.md`. It enables the author file tools
 and disables inherited MCPs and command execution for this agent. Existing
 interactive and reviewer profiles are unchanged.
+
+The Antigravity agent profile is selectable with `AGY_AGENT` (default
+`aris-model-worker`), so one server binary can serve more than one role. The
+literature scout uses the same server under a different profile:
+
+```bash
+codex mcp add model-scout \
+  --env AGY_AGENT=aris-scout \
+  --env 'MODEL_WORKER_ALLOWED_ROOTS=["/absolute/path/to/your/project"]' \
+  -- python3 /absolute/path/to/aris/mcp-servers/model-worker/server.py
+```
+
+Copy `aris-scout.md` to `~/.gemini/config/agents/aris-scout.md` first, then check
+`agy agent` lists it. Unlike the author profile, the scout owns the `search_web`
+and `read_url_content` tools and sets `commandExecutionPolicy: auto`; it writes
+papers to the file instead of answering in chat.
 
 Register the new service, substituting your paths:
 
@@ -45,9 +60,9 @@ claude mcp add model-worker -s user \
   -- python3 /absolute/path/to/aris/mcp-servers/model-worker/server.py
 ```
 
-Set `AGY_BIN`, `GROK_BIN`, or `CLAUDE_BIN` in the server environment when the CLI
-is not on its PATH. Configure your existing proxy in that environment if needed.
-Antigravity and Grok use their existing CLI login. The Claude backend uses bare,
+Set `AGY_BIN` or `CLAUDE_BIN` in the server environment when the CLI is not on
+its PATH. Configure your existing proxy in that environment if needed.
+Antigravity uses its existing CLI login. The Claude backend uses bare,
 restricted mode: provide API credentials through the server environment, or let
 it read provider authentication fields from `~/.claude/settings.json` (override
 with `MODEL_WORKER_CLAUDE_SETTINGS`). Bare mode does not load OAuth/keychain login.
@@ -111,7 +126,7 @@ and tool calls. `tools/list` does not call a model.
 The skill packs support an optional external writer independently of the reviewer, configured through flags or natural-language preferences:
 
 ```text
-/paper-writing "PAPER_PLAN.md" — writer: antigravity, writer-model: gemini-4-argon-high, writer-effort: high
+/research-refine "your draft proposal" — writer: antigravity, writer-model: gemini-4-argon-high, writer-effort: high
 ```
 
 When an external writer is configured, the main executor reads the source material, prepares the narrative spine and factual brief, and passes the workspace, target files, and writing guidance to `worker`. The writer drafts the substantive prose, and the executor saves the returned `threadId` so `worker_reply` continues the same session. The executor then checks technical accuracy, formulas, citations, and compilation against that brief while preserving good wording, sending targeted revisions through `worker_reply`. Without an external writer, the main executor writes directly.
@@ -122,8 +137,8 @@ Regardless of who writes, every draft follows HERO and the launch principle: lea
 
 `MODEL_WORKER_ALLOWED_ROOTS` admits task working directories; it is not an OS
 sandbox. The backend's native permissions govern individual file operations.
-Antigravity uses its author profile and `accept-edits` mode, Grok uses native
-`workspace` mode and file-tool permissions, and Claude uses `--restricted`.
+Antigravity uses its author profile and `accept-edits` mode, and Claude uses
+`--restricted`.
 This version exposes file tools, without a shell or compilation runner. The main
 executor runs builds and other commands. Native denial or failure is surfaced;
 the bridge does not bypass permission checks.
@@ -141,5 +156,5 @@ python3 -m pytest tests/test_model_worker.py -q
 Protocol tests use fake CLIs for file writes, native continuation, routing and
 failure handling. On 2026-11-01, Gemini 4 / high also wrote this README's usage
 section through the new MCP and revised the file in the same native session
-after a bridge restart. Grok and Claude author adapters have protocol coverage;
-live provider calls for those two adapters have not been run for this release.
+after a bridge restart. The Claude author adapter has protocol coverage; live provider calls for it have
+not been run for this release.

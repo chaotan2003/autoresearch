@@ -114,7 +114,7 @@ OPENALEX_FETCHER=".aris/tools/openalex_fetch.py"
 [ -f "$OPENALEX_FETCHER" ] || { [ -n "${ARIS_REPO:-}" ] && OPENALEX_FETCHER="$ARIS_REPO/tools/openalex_fetch.py"; }
 [ -f "$OPENALEX_FETCHER" ] || {
   echo "ERROR: openalex_fetch.py not resolved at .aris/tools/, tools/, \$ARIS_REPO/tools/, or via ~/.aris/repo." >&2
-  echo "       Fix: rerun bash tools/install_aris.sh or smart_update.sh (refreshes ~/.aris/repo), export ARIS_REPO, or copy the helper to tools/." >&2
+  echo "       Fix: rerun bash tools/install_aris.sh (refreshes ~/.aris/repo), export ARIS_REPO, or copy the helper to tools/." >&2
   echo "       Also ensure 'requests' is installed: pip install requests" >&2
   exit 1
 }

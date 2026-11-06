@@ -10,10 +10,6 @@ This is an intentionally longer reference. It is not meant to replace the main w
 - you need to verify that a specific factual claim really comes from the cited paper,
 - or you need to clean and standardize a bibliography in a more disciplined way.
 
-> **Quick map**: pre-search filter → `Pre-Search Verification Protocol` (this
-> file); submission-time bibliography audit → [`/citation-audit`](../citation-audit/SKILL.md);
-> numerical-claim audit → [`/paper-claim-audit`](../paper-claim-audit/SKILL.md).
-
 ## Contents
 
 - [Why Citation Verification Matters](#why-citation-verification-matters)

@@ -58,9 +58,5 @@ This protocol applies to all cross-agent review calls in `skills/skills-codex/`,
 
 - `research-review`
 - `auto-review-loop`
-- `paper-plan`
-- `paper-write`
-- `paper-figure`
-- `rebuttal`
 - `meta-optimize`
 - any skill that launches a reviewer via `spawn_agent` or continues one via `send_input`

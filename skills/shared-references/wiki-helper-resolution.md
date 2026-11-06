@@ -35,7 +35,7 @@ The skill **is** the wiki tool. If the helper is missing, fail loudly.
   echo "ERROR: research_wiki.py not found at .aris/tools/, tools/, \$ARIS_REPO/tools/, or via ~/.aris/repo." >&2
   echo "       Fix one of:" >&2
   echo "         1. rerun 'bash tools/install_aris.sh' from the ARIS repo (creates .aris/tools symlink, refreshes ~/.aris/repo)" >&2
-  echo "         2. rerun 'bash tools/smart_update.sh' (refreshes ~/.aris/repo)" >&2
+  echo "         2. rerun 'bash tools/install_aris.sh' (refreshes ~/.aris/repo)" >&2
   echo "         3. export ARIS_REPO=<path-to-ARIS-repo>" >&2
   echo "         4. cp <ARIS-repo>/tools/research_wiki.py tools/" >&2
   exit 1
@@ -54,7 +54,7 @@ skipped.
 [ -f "$WIKI_SCRIPT" ] || {
   echo "WARN: research_wiki.py not found at .aris/tools/, tools/, \$ARIS_REPO/tools/, or via ~/.aris/repo." >&2
   echo "      Primary output will still be produced; wiki update is skipped." >&2
-  echo "      Fix: rerun 'bash tools/install_aris.sh' or 'smart_update.sh' (refreshes ~/.aris/repo), export ARIS_REPO, or 'cp <ARIS-repo>/tools/research_wiki.py tools/'." >&2
+  echo "      Fix: rerun 'bash tools/install_aris.sh' (refreshes ~/.aris/repo), export ARIS_REPO, or 'cp <ARIS-repo>/tools/research_wiki.py tools/'." >&2
   WIKI_SCRIPT=""
 }
 ```
@@ -74,7 +74,7 @@ Four locations correspond to four legitimate install / dev paths:
 | `.aris/tools/research_wiki.py` | After running `bash tools/install_aris.sh` in the user project (Phase 0 symlink, added in #174 / #192) |
 | `tools/research_wiki.py` | (a) Manual copy of the helper into the user project (a documented temporary workaround); (b) running a SKILL from inside the ARIS repo itself |
 | `$ARIS_REPO/tools/research_wiki.py` | Env var explicitly set, or auto-resolved from `.aris/installed-skills.txt`'s `repo_root` field |
-| `$ARIS_REPO/tools/research_wiki.py` via `~/.aris/repo` | Global pointer file written by `install_aris*.{sh,ps1}` / `smart_update*.{sh,ps1}` (#366); the only layer that resolves for a **global copy-install** (`~/.claude/skills/research-wiki`) where none of the first three apply — there is no project-local `.aris/`, no `tools/` copy, and no manifest to read `ARIS_REPO` from |
+| `$ARIS_REPO/tools/research_wiki.py` via `~/.aris/repo` | Global pointer file written by `install_aris*.sh` (#366); the only layer that resolves for a **global copy-install** (`~/.claude/skills/research-wiki`) where none of the first three apply — there is no project-local `.aris/`, no `tools/` copy, and no manifest to read `ARIS_REPO` from |
 
 Order matters: the symlinked install is preferred because the symlink
 auto-tracks upstream tool fixes; the manual copy is second because it

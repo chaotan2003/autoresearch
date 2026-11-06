@@ -22,20 +22,13 @@ FAKE_CLI = r"""#!/usr/bin/env python3
 import json, os, pathlib, signal, sys, time, uuid
 args=sys.argv[1:]
 def value(flag): return args[args.index(flag)+1]
-backend = 'antigravity' if '--agent' in args else 'grok' if '--prompt-file' in args else 'claude-code'
+backend = 'antigravity' if '--agent' in args else 'claude-code'
 if backend == 'antigravity':
-    assert value('--agent') == 'aris-model-worker'
+    assert value('--agent') == os.environ.get('EXPECT_AGENT', 'aris-model-worker')
     assert value('--mode') == 'accept-edits' and '--sandbox' in args
     prompt=json.loads(sys.stdin.read())['message']['content']
     session=value('--conversation') if '--conversation' in args else str(uuid.uuid4())
     pathlib.Path(value('--log-file')).write_text('Propagating selected model override to backend: label="Gemini Fake (High)"')
-elif backend == 'grok':
-    assert value('--sandbox') == 'workspace'
-    assert value('--tools') == 'read_file,grep,list_dir,write,search_replace'
-    assert 'Edit(./**)' in args and 'MCPTool' in args
-    assert '--no-subagents' in args and '--disable-web-search' in args
-    prompt=pathlib.Path(value('--prompt-file')).read_text()
-    session=value('--resume') if '--resume' in args else value('--session-id')
 else:
     assert '--restricted' in args and '--bare' in args
     assert value('--setting-sources') == ''
@@ -75,10 +68,6 @@ if backend == 'antigravity':
     print(json.dumps({'event':'init','conversation_id':session,'init':{'model':'wrong-model' if prompt == 'MODEL_MISMATCH' else value('--model')}}))
     if prompt == 'ERROR_THEN_SUCCESS': print(json.dumps({'event':'error','error':'failed'}))
     print(json.dumps({'event':'result','result':{'conversation_id':terminal_session,'response':content,'status':'ERROR' if prompt == 'FAIL' else 'SUCCESS'}}))
-elif backend == 'grok':
-    print(json.dumps({'type':'system','subtype':'init','session_id':session}))
-    if prompt == 'ERROR_THEN_SUCCESS': print(json.dumps({'type':'error','message':'failed'}))
-    print(json.dumps({'type':'result','subtype':'error' if prompt == 'FAIL' else 'success','session_id':terminal_session,'result':content,'stop_reason':'max_tokens' if prompt == 'TRUNCATED' else 'end_turn','modelUsage':{'grok-actual':{}}}))
 else:
     print(json.dumps({'type':'result','subtype':'error' if prompt == 'FAIL' else 'success','is_error':prompt=='FAIL','session_id':terminal_session,'result':content,'stop_reason':'max_tokens' if prompt == 'TRUNCATED' else 'end_turn','modelUsage':{'deepseek-actual':{}}}))
 """
@@ -179,7 +168,6 @@ class ModelWorkerTests(unittest.TestCase):
     def test_each_backend_writes_and_resumes_after_server_restart(self):
         for backend, actual in (
             ("antigravity", "requested-alias"),
-            ("grok", "grok-actual"),
             ("claude-code", "deepseek-actual"),
         ):
             with self.subTest(backend=backend):
@@ -222,13 +210,21 @@ class ModelWorkerTests(unittest.TestCase):
                     (self.work / "answer.txt").read_text(), "source first revised"
                 )
 
+    def test_agency_profile_is_selectable_per_server(self):
+        env = {**self.env, "AGY_AGENT": "aris-scout", "EXPECT_AGENT": "aris-scout"}
+        bridge = Bridge(env)
+        self.addCleanup(bridge.close)
+        result = bridge.call("worker", self.args("antigravity"))["result"]
+        self.assertFalse(result.get("isError"), result)
+        self.assertEqual((self.work / "answer.txt").read_text(), "source first")
+
     def test_invalid_arguments_do_not_launch_cli(self):
         bridge = self.bridge()
         for changes in (
             {"cwd": "."},
             {"cwd": str(self.root)},
             {"backend": "gemini"},
-            {"backend": "grok", "effort": "max"},
+            {"backend": "grok"},
             {"timeout_sec": True},
             {"timeout_sec": 0},
             {"prompt": ""},
@@ -277,7 +273,7 @@ class ModelWorkerTests(unittest.TestCase):
 
     def test_failures_empty_results_and_truncation_are_errors(self):
         bridge = self.bridge()
-        for backend in ("antigravity", "grok", "claude-code"):
+        for backend in ("antigravity", "claude-code"):
             for prompt in (
                 ("CRASH", "FAIL", "EMPTY", "UNKNOWN_TOOL", "MISSING_TERMINAL_SESSION")
                 + (() if backend == "antigravity" else ("TRUNCATED", "REPLACE_SESSION"))
@@ -376,7 +372,6 @@ class ModelWorkerTests(unittest.TestCase):
 
     def test_existing_reviewer_defaults_are_unchanged(self):
         for directory, expected in (
-            ("grok-exec", "read-only"),
             ("claude-review", "plan"),
             ("antigravity-exec", "aris-antigravity-review"),
         ):
@@ -386,10 +381,7 @@ class ModelWorkerTests(unittest.TestCase):
             )
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
-            if directory == "grok-exec":
-                self.assertEqual(module.normalize_options({})["sandbox"], expected)
-                self.assertEqual(module.READ_TOOLS, "read_file,grep,list_dir")
-            elif directory == "antigravity-exec":
+            if directory == "antigravity-exec":
                 self.assertEqual(module.AGENT, expected)
             else:
                 with patch.object(module, "find_claude_bin", return_value="claude"):

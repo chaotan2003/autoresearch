@@ -21,7 +21,7 @@ audits reached accepted assurance.
 - No duplicate templates or resource directories
 - No replacement for the base `skills/skills-codex/` installation
 
-Current overrides:
+Current overrides (7):
 
 - `idea-creator`
 - `idea-discovery`
@@ -30,66 +30,18 @@ Current overrides:
 - `novelty-check`
 - `research-refine`
 - `auto-review-loop`
-- `grant-proposal`
-- `paper-plan`
-- `paper-figure`
-- `paper-poster-html`
-- `paper-slides`
-- `paper-write`
-- `paper-writing`
-- `auto-paper-improvement-loop`
-
-## Core 8 vs Full 15
-
-To avoid confusion, there are two useful ways to describe this overlay:
-
-- **Core 8**: the direct reviewer-heavy overlay set that maps one-to-one to the earlier Claude-review route
-- **Full 15**: the current reviewer-aware Codex skill surface routed to Gemini in this repository
-
-The **core 8** are:
-
-- `research-review`
-- `novelty-check`
-- `research-refine`
-- `auto-review-loop`
-- `paper-plan`
-- `paper-figure`
-- `paper-write`
-- `auto-paper-improvement-loop`
-
-The additional **7** routed reviewer-aware entry points are:
-
-- `idea-creator`
-- `idea-discovery`
-- `idea-discovery-robot`
-- `grant-proposal`
-- `paper-writing`
-- `paper-slides`
-- `paper-poster-html`
-
-So when comparing against the Claude overlay, the cleanest statement is:
-
-> The Gemini route preserves the same core 8-skill reviewer overlay shape, but expands the practical reviewer-facing surface to 15 skills in the current repo.
 
 ## Direct Consumers vs Wrappers
 
-- **12 direct consumers** call `mcp__gemini-review__review_start` / `review_reply_start` / `review_status` themselves:
+- **5 direct consumers** call `mcp__gemini-review__review_start` / `review_reply_start` / `review_status` themselves:
   - `research-review`
   - `novelty-check`
   - `research-refine`
   - `auto-review-loop`
-  - `paper-plan`
-  - `paper-figure`
-  - `paper-write`
-  - `auto-paper-improvement-loop`
   - `idea-creator`
-  - `grant-proposal`
-  - `paper-slides`
-  - `paper-poster-html`
-- **3 wrappers** mostly orchestrate downstream reviewer-aware skills and pass `REVIEWER_MODEL=gemini-review` through:
+- **2 wrappers** mostly orchestrate downstream reviewer-aware skills and pass `REVIEWER_MODEL=gemini-review` through:
   - `idea-discovery`
   - `idea-discovery-robot`
-  - `paper-writing`
 
 ## Install
 
@@ -152,10 +104,10 @@ This avoids the observed Codex-hosted timeout issue when Gemini is invoked synch
 
 This overlay was validated in two ways:
 
-- **Coverage check**: all `15` predefined reviewer-aware skill overrides in this package were checked to confirm they target `gemini-review`
+- **Coverage check**: all `7` predefined reviewer-aware skill overrides in this package were checked to confirm they target `gemini-review`
 - **Runtime check**:
   - the underlying bridge completed sync, async, threaded follow-up, and multimodal local-image review tests
-  - representative Codex-side runs on a private, non-public research repository confirmed that real skill executions could reach the Gemini reviewer path for research-review, idea-generation, and paper-planning style tasks
+  - representative Codex-side runs on a private, non-public research repository confirmed that real skill executions could reach the Gemini reviewer path for research-review, idea-generation, and proposal-refinement style tasks
 
 Operational note:
 

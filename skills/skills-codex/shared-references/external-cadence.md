@@ -151,17 +151,13 @@ A deterministic completion check cannot replace it. Never put one inside
 
 - `/auto-review-loop` — already loops internally; reviewer carries
   round-to-round memory in one `threadId` (`codex-reply`)
-- `/auto-review-loop-llm`, `/auto-review-loop-minimax` — same loop, alternate
+- `/auto-review-loop-llm` — same loop, alternate
   reviewer backend; same internal round cadence (each round's prior-round
   summary is fed into the next prompt — a stateless per-round API call, not a
   shared thread, but still verdict-bearing and self-iterating)
-- `/auto-paper-improvement-loop` — review → fix → recompile loop with its own
-  round structure and a fresh-reviewer bias guard each round (no `codex-reply`)
 - `/research-review` — produces a traced review verdict (provisional in base Codex)
 - `/result-to-claim` — judges whether results support a claim
 - `/experiment-audit` — judges experiment integrity
-- `/paper-claim-audit` — judges paper-to-evidence fidelity
-- `/citation-audit` — judges bibliographic correctness
 - `/proof-checker` — judges proof validity across rounds
 - `/kill-argument` — adversarial accept/reject verdict
 

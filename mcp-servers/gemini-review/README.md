@@ -89,8 +89,8 @@ This bridge was validated against the ARIS reviewer workflow in a privacy-safe w
   - `review_start` -> `review_status`
   - `review_reply_start` -> `review_status`
   - local-image multimodal review through `imagePaths`
-- the overlayed reviewer-aware Codex skills were checked to ensure all `15` predefined overrides point at this bridge contract
-- representative Codex-side executions on a private, non-public research repository confirmed that real skill runs can enter the `gemini-review` path from research-review, idea-generation, and paper-planning style workflows
+- the overlayed reviewer-aware Codex skills were checked to ensure all `7` predefined overrides point at this bridge contract
+- representative Codex-side executions on a private, non-public research repository confirmed that real skill runs can enter the `gemini-review` path from research-review, idea-generation, and proposal-refinement style workflows
 
 Important nuance from testing:
 

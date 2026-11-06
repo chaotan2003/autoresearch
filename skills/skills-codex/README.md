@@ -4,7 +4,7 @@ Codex-native mirror and adaptation layer for the main ARIS `skills/` package.
 
 ## Scope
 
-- Base mirror coverage: all `87` mainline skills under `skills/`
+- Base mirror coverage: all `48` mainline skills under `skills/`
 - Support directory: `shared-references/`, with all `30/30` mainline reference names mirrored
 - Default reviewer contract for reviewer-heavy skills:
   - round 1: `spawn_agent`
@@ -56,7 +56,7 @@ for that thread by default, without a separate request or confirmation. First re
 the installed `${CODEX_HOME:-~/.codex}/skills/goal-pulse/SKILL.md`; if missing, follow
 HERO's public installation guide to prepare the skill and dependencies if missing;
 report any setup blocker instead of claiming reminders are running. HERO maintains
-the single implementation, outside ARIS's 87-skill pack. Project-local installs
+the single implementation, outside ARIS's 55-skill pack. Project-local installs
 receive the activation instructions through ARIS's managed `AGENTS.md` block.
 For a global copied installation, follow HERO's guide once to add its persistent
 `AGENTS.md` activation block; Goals then trigger it by default.
@@ -145,38 +145,10 @@ or bulk overwrite existing skills. Then set the project reviewer configuration
 and register its bridge. No migration command here writes global settings
 automatically; restart Codex after installation changes so it reloads the pack.
 
-## Copy Install and Update
-
-If you intentionally use a copied Codex install instead of managed project symlinks:
-
-```bash
-mkdir -p ~/.codex/skills
-cp -a ~/aris_repo/skills/skills-codex/. ~/.codex/skills/
-```
-
-Update copied installs with:
-
-```bash
-bash ~/aris_repo/tools/smart_update_codex.sh
-bash ~/aris_repo/tools/smart_update_codex.sh --apply
-```
-
-For a copied project-local Codex install:
-
-```bash
-bash ~/aris_repo/tools/smart_update_codex.sh --project ~/your-project
-bash ~/aris_repo/tools/smart_update_codex.sh --project ~/your-project --apply
-```
-
-`smart_update_codex.sh` refuses symlink-managed installs and redirects them to `install_aris_codex.sh --reconcile`.
-
 ## Non-Degrading Skills
 
 The following Codex skills must not silently degrade when their required capability is missing:
 
-- `comm-lit-review`
 - `research-lit`
-- `paper-poster-html`
-- `pixel-art`
 
 If the required source, reviewer, or local preview capability is unavailable, the skill should stop and tell the user what to configure.

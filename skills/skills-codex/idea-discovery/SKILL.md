@@ -71,7 +71,7 @@ remain non-blocking under `AUTO_PROCEED=true`.
 ## Per-stage evidence gate (`RESUMABLE = true`)
 
 Resolve `run_state.py` and `idea_discovery_gate.py` from the Codex manifest
-using the same resolver pattern as `/research-pipeline`. If either helper is
+using the canonical resolver pattern. If either helper is
 unavailable, the final report is `BLOCKED`; do not silently continue without a
 state record.
 
@@ -409,7 +409,6 @@ Finalize `idea-stage/IDEA_REPORT.md` with all accumulated information:
 ## Next Steps
 - [ ] /run-experiment to deploy experiments from the plan
 - [ ] /auto-review-loop to iterate until submission-ready
-- [ ] Or invoke /research-pipeline for the complete end-to-end flow
 ```
 
 Before presenting this report as complete, run the per-stage evidence gate
@@ -486,5 +485,4 @@ After this pipeline produces a validated top idea:
 /run-experiment                     ← deploy experiments from the plan
 /auto-review-loop "top idea"        ← Workflow 2: iterate until submission-ready
 
-Or use /research-pipeline for the full end-to-end flow.
 ```

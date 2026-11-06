@@ -72,7 +72,7 @@ def test_llm_chat_negative_verdict_continues_on_same_backend() -> None:
     assert transition.next_backend == "llm-chat"
 
 
-def test_llm_chat_is_not_implicitly_allowed_as_copilot_finalizer() -> None:
+def test_llm_chat_is_not_implicitly_allowed_as_finalizer() -> None:
     transition = review_gate.evaluate_transition(
         round_backend="llm-chat",
         score=8,

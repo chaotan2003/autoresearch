@@ -71,7 +71,7 @@ def _run_chain(cwd: Path, env_overrides: dict | None = None, home: Path | None =
     env = os.environ.copy()
     env.pop("ARIS_REPO", None)
     # Hermetic $HOME: a real dev machine may already have a ~/.aris/repo
-    # pointer file (written by install_aris.sh/smart_update.sh, #366),
+    # pointer file (written by install_aris.sh, #366),
     # which would make layer-4 fire unexpectedly in tests that are only
     # meant to exercise layers 1-3, or in the helper-missing test.
     if home is not None:

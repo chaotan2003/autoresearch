@@ -1,6 +1,6 @@
 ---
 name: auto-review-loop
-description: Autonomous multi-round research review loop. In Copilot CLI it defaults to the native complementary rubber-duck subagent with host-event model evidence; elsewhere it uses Codex, while explicit external reviewer overrides remain available. Implements fixes and re-reviews until a policy-approved positive assessment or max rounds is reached.
+description: Autonomous multi-round research review loop. It defaults to Codex, while explicit external reviewer overrides remain available. Implements fixes and re-reviews until a policy-approved positive assessment or max rounds is reached.
 argument-hint: "[topic-or-scope]"
 allowed-tools: Bash(*), Read, Grep, Glob, Write, Edit, Skill, Task, mcp__codex__codex, mcp__codex__codex-reply, mcp__manual_review__review, mcp__manual_review__review_reply, mcp__antigravity__antigravity, mcp__antigravity__antigravity-reply, mcp__grok__grok, mcp__grok__grok-reply, mcp__claude-review__review, mcp__claude-review__review_reply, mcp__claude-review__review_start, mcp__claude-review__review_reply_start, mcp__claude-review__review_status
 ---
@@ -26,7 +26,7 @@ Autonomously iterate: review → implement fixes → re-review, until an indepen
 - POSITIVE_THRESHOLD: score >= 6/10 **AND** verdict ∈ {"ready", "almost"} — **both** must hold. This matches the operative Phase-E STOP CONDITION exactly; the verdict vocabulary is {"ready", "almost", "not ready"} (a high score with a "not ready" verdict does NOT stop the loop). Earlier wording here used `or` and a stale verdict set ("accept"/"sufficient"/"ready for submission") — that was an internal inconsistency; the `AND` form is authoritative.
 - REVIEW_DOC: `review-stage/AUTO_REVIEW.md` (cumulative log) *(fall back to `./AUTO_REVIEW.md` for legacy projects)*
 - REVIEWER_MODEL = `gpt-6-astra` — Default model for the Codex backend. Must be an OpenAI model (e.g., `gpt-6-astra`, `gpt-6.1-sol`). Manual backend uses a model the user chooses — it must be a recognized model from a different family (OpenAI, Anthropic, Google, DeepSeek, Moonshot/Kimi, Qwen).
-- **REVIEWER_BACKEND** — With no inline or project backend selection, start as `auto`; Step -1 runs exactly one two-call native marker/challenge probe for the first review. A bound Copilot CLI root session uses `copilot-native` (built-in complementary `rubber-duck` subagent); an unbound/non-Copilot host keeps the existing `codex` default. Inline or project selection of `codex`, `antigravity`/`gemini`, `grok`, `claude-code`, `oracle-pro`, `agy`, or `manual` bypasses the probe. Explicit `— reviewer: copilot` retains the compatibility `copilot --agent` drive mode and its later Codex/manual finalizer. The native path gets both actual model IDs from host session events; it never needs `COPILOT_CLI` or caller-provided `--executor-model`. See `shared-references/reviewer-routing.md`.
+- **REVIEWER_BACKEND** — With no inline or project backend selection, default to `codex`. Inline or project selection of `codex`, `antigravity`/`gemini`, `grok`, `claude-code`, `oracle-pro`, `agy`, or `manual` takes precedence. See `shared-references/reviewer-routing.md`.
 - **OUTPUT_DIR = `review-stage/`** — All review-stage outputs go here. Create the directory if it doesn't exist.
 - **HUMAN_CHECKPOINT = false** — When `true`, pause after each round's review (Phase B) and present the score + weaknesses to the user. Wait for user input before proceeding to Phase C. The user can: approve the suggested fixes, provide custom modification instructions, skip specific fixes, or stop the loop early. When `false` (default), the loop runs fully autonomously.
 - **COMPACT = false** — When `true`, (1) read `EXPERIMENT_LOG.md` and `findings.md` instead of parsing full logs on session recovery, (2) append key findings to `findings.md` after each round.
@@ -45,7 +45,7 @@ Autonomously iterate: review → implement fixes → re-review, until an indepen
 
 Resolve reviewer selection before any review: invocation `— reviewer:` →
 project `.aris/reviewer.json` → host default. Use `reviewer_route.py` with
-`--host claude-code --tier regular` (or actual Copilot host), resolved per
+`--host claude-code --tier regular` (or the actual host), resolved per
 `integration-contract.md` §2, and [reviewer-backends.md](../shared-references/reviewer-backends.md).
 Only the absence of both inline and project backend selection enters the
 automatic host protocol below. Invalid configuration is `REVIEW_UNAVAILABLE`.
@@ -73,72 +73,7 @@ When calling the reviewer, branch on REVIEWER_BACKEND:
   round. Unavailable or incomplete review gives `REVIEW_UNAVAILABLE`.
 
 **If neither an inline nor project reviewer backend was supplied:**
-  Set REVIEWER_BACKEND to `auto`. At Step -1 of the first round, resolve
-  `copilot_native_evidence.py` using the canonical four-layer helper chain.
-  Generate a fresh binding `<run_id>_r<round>_review_<8-random-hex>` and invoke
-  `marker`, wait, then invoke `challenge` as **two distinct root Bash calls**.
-  Put the literal binding and concrete resolved helper path in both calls;
-  Copilot Bash calls do not share variables. If the challenge binds, set
-  REVIEWER_BACKEND to `copilot-native` and use that same challenge for the
-  first review. Do not issue a second activation challenge in Phase A. If it
-  exits 3 because no current Copilot root session is bound, use `codex`.
-  Explicit reviewer directives bypass this probe. If the helper is missing,
-  native acceptance is unavailable; use Codex only if that external backend
-  is positively available, otherwise emit `REVIEW_UNAVAILABLE`.
-
-**If REVIEWER_BACKEND = `copilot-native`:**
-  Read the challenge nonce and host-reported executor model. Invoke the host's
-  native `task` tool with `agent_type: rubber-duck`; do not start a subprocess
-  and do not specify a reviewer model. The prompt contains the exact standalone
-  `ARIS_REVIEW_NONCE=<nonce>` line, artifact/diff paths, the output contract,
-  and (round 2+) `review-stage/REVIEWER_MEMORY.md`. It contains no executor
-  summary or fix narrative. After the task completes, invoke
-  `copilot_native_evidence.py verify` to create the evidence and raw-response
-  artifacts. The verifier must observe one successful linked rubber-duck
-  lifecycle and known, different host-reported model families.
-
-  Pass the evidence to both `review_gate.py --native-evidence` and
-  `save_trace.sh --backend copilot-native --native-evidence`. A qualifying
-  native positive may stop directly; no external finalizer is needed. A native
-  negative continues with a fresh marker/challenge/subagent next round. Every
-  verdict-bearing native call—including a hard-mode rebuttal ruling—gets one
-  unique `<run_id, round, purpose>` artifact set and exactly one challenge.
-  Missing, same/unknown-family, malformed, stale, or mismatched evidence is
-  never a verdict. If native complementary dispatch is unavailable, fall back
-  only to a positively available opposite-family backend: Anthropic/Google
-  executor → Codex; OpenAI executor → manual with a reported non-OpenAI model.
-  Otherwise emit `REVIEW_UNAVAILABLE`. Full protocol:
-  `shared-references/reviewer-routing.md`.
-
-**If REVIEWER_BACKEND = `copilot`:**
-  **Require `--executor-model`:** if not provided → emit `REVIEW_UNAVAILABLE`.
-  **Determine executor family** from `--executor-model` (see reviewer-routing.md).
-  **Router picks opposite-family profile:**
-  - executor_family=openai → profile="aris-reviewer-claude" (anthropic)
-  - executor_family=anthropic → profile="aris-reviewer-openai" (openai)
-  - executor_family=google → profile="aris-reviewer-openai" (openai, default cross)
-  - executor_family=unknown → `REVIEW_UNAVAILABLE` (fail closed).
-  **Verify the profile file** exists at `.github/agents/<profile>.agent.md`.
-  If missing → `REVIEW_UNAVAILABLE`.
-  **Read its `model:` field** into `REVIEWER_MODEL`, derive `reviewer_family`
-  from that model string, and verify it differs from `executor_family`. Pass
-  the same value through subprocess `--model`; never trust a caller-supplied
-  family label or profile-only pinning under an Auto session.
-  **Identity assurance:** `--executor-model` is caller-declared routing input,
-  not runtime attestation. Record `executor_model_source: caller-declared`, the
-  derived `family_relation`, and `independence_verified: unverified`. A pair of
-  different model strings must never be promoted to independently verified.
-  **Capability gate:** `copilot --help` must advertise `--model`, `--effort`,
-  and `--allow-tool`; otherwise emit `REVIEW_UNAVAILABLE`.
-  **Use the `copilot --agent` subprocess** (documented Copilot CLI form)
-  with the selected profile, `--model "$REVIEWER_MODEL"`, `--effort xhigh`,
-  and `--allow-tool=read` for each review call.
-  **Multi-round:** each round is a fresh `copilot --agent` call with the same
-  profile; reviewer memory is carried via `review-stage/REVIEWER_MEMORY.md` artifact.
-  If `copilot` CLI is unavailable → `REVIEW_UNAVAILABLE` for that drive round;
-  do not silently substitute another transport. A later positive Copilot
-  verdict still requires the separately documented Codex/manual finalizer.
-  See `shared-references/reviewer-routing.md` for the full copilot contract.
+  Use `codex`.
 
 **If REVIEWER_BACKEND = `codex`:**
   Use `mcp__codex__codex` for new review threads.
@@ -159,8 +94,7 @@ When calling the reviewer, branch on REVIEWER_BACKEND:
   mandatory escalation, emit `REVIEW_UNAVAILABLE` rather than guessing.
 
 Prompt fidelity: the manual review task must be exactly the same text that Codex would receive; the transport may add only the required `Reviewer-Model:` response-format instruction.
-Review tracing applies to every backend. Native traces are populated from the
-revalidated host-event artifact rather than caller model declarations.
+Review tracing applies to every backend.
 
 ## State Persistence (Compact Recovery)
 
@@ -170,21 +104,18 @@ Long-running loops may hit the context window limit, triggering automatic compac
 {
   "run_id": "run_20260713_a1b2c3d4",
   "round": 2,
-  "threadId": null,
-  "reviewer_profile": "rubber-duck",
-  "reviewer_backend": "copilot-native",
+  "threadId": "thread_20260713_a1b2c3d4",
+  "reviewer_backend": "codex",
   "executor_model": "claude-sonnet-4.6",
-  "executor_model_source": "host-session-event",
+  "executor_model_source": "caller-declared",
   "executor_family": "anthropic",
-  "requested_reviewer_model": null,
-  "reported_reviewer_model": "gpt-5.5",
-  "reviewer_model_source": "host-session-event",
+  "requested_reviewer_model": "gpt-6-astra",
+  "reported_reviewer_model": "gpt-6-astra",
+  "reviewer_model_source": "requested",
   "reviewer_family": "openai",
   "family_relation": "different",
-  "identity_assurance": "host_event_verified",
-  "independence_verified": true,
-  "native_evidence_id": "cne_0123456789abcdef0123456789abcdef",
-  "native_evidence_path": "review-stage/COPILOT_NATIVE_run_20260713_a1b2c3d4_ROUND_2_REVIEW.evidence.json",
+  "identity_assurance": "caller_declared",
+  "independence_verified": "unverified",
   "requires_external_acquittal": false,
   "status": "in_progress",
   "difficulty": "medium",
@@ -197,13 +128,7 @@ Long-running loops may hit the context window limit, triggering automatic compac
 
 - **`run_id`** — Globally unique per invocation. Generated on fresh start as `run_<YYYYMMDD>_<8-char-hex>` (e.g., `run_20260713_a1b2c3d4`). Preserved across round writes. On resume, read from state file unchanged. This binds all round state, reviewer-memory appends, and acquittal receipts to one run so a stale completed state from a previous invocation cannot leak into the current run's acquittal check.
 
-When REVIEWER_BACKEND = `copilot-native`, save the evidence ID/path and the
-host-event executor/reviewer models, derived families, and sources. Each round
-is a fresh rubber-duck subagent and therefore gets a fresh evidence artifact;
-there is no persistent child handle. When REVIEWER_BACKEND = compatibility
-`copilot`, retain `reviewer_profile`, requested model, caller-declared executor
-model, `independence_verified: "unverified"`, and the external-finalizer
-obligation. For `codex` save its MCP `threadId`; for `manual` save `threadId`
+For `codex` save its MCP `threadId`; for `manual` save `threadId`
 and the reported reviewer identity. On resume, use `reviewer_backend` to select
 the continuation mechanism and preserve `requires_external_acquittal`.
 
@@ -213,13 +138,10 @@ the continuation mechanism and preserve `requires_external_acquittal`.
 
 ### Append-Only External-Finalizer Receipt
 
-Whenever a Copilot path hands the verdict to an external backend—after a
-positive compatibility-drive review or after a pre-verdict native dispatch
-failure—maintain an **append-only** finalizer log at
-`review-stage/ACQUITTAL_LOG.jsonl`. Each line records the Codex/manual reviewer
-that completed that run. A successful native rubber-duck round never needs or
-writes this receipt; its evidence sidecar is the acceptance record. The
-historical filename is retained for compatibility:
+Whenever `round_requires_external_acquittal` is `true`, maintain an
+**append-only** finalizer log at `review-stage/ACQUITTAL_LOG.jsonl`. Each line
+records the Codex/manual reviewer that completed that run. The historical
+filename is retained for compatibility:
 
 ```jsonl
 {"run_id":"run_20260713_a1b2c3d4","round":3,"backend":"codex","effort":"xhigh","verdict":"ready","score":7.5,"executor_model":"claude-sonnet-4-5","executor_model_source":"caller-declared","executor_family":"anthropic","reviewer_model":"gpt-6-astra","reviewer_model_source":"requested","reviewer_family":"openai","family_relation":"different","identity_assurance":"caller_declared","independence_verified":"unverified","trace_id":"auto-review-loop/2026-07-13_run03","timestamp":"2026-07-13T14:22:00Z"}
@@ -230,17 +152,16 @@ historical filename is retained for compatibility:
 | Rule | Detail |
 |------|--------|
 | **Append-only** | Never delete, never truncate, never overwrite lines. Only `>>`. |
-| **Who writes** | Only a `codex` or `manual` round at `xhigh` effort when `round_requires_external_acquittal` was `true`. A Copilot review/dispatch never writes a finalizer line itself. |
+| **Who writes** | Only a `codex` or `manual` round at `xhigh` effort when `round_requires_external_acquittal` was `true`. |
 | **When to write** | At the end of Phase E, after the policy-approved finalizer returns score >= 6 AND verdict ∈ {"ready", "almost"}. A normal default-Codex run does not need this sidecar. |
-| **`run_id` binding** | Every line carries the current `run_id` and round so the Copilot → finalizer transition is auditable. |
+| **`run_id` binding** | Every line carries the current `run_id` and round so the finalizer transition is auditable. |
 | **Trace linkage** | `trace_id` MUST reference the real trace artifact in `.aris/traces/`; source and family fields in the receipt must exactly match that trace. |
 | **Identity honesty** | Re-derive `family_relation` from the model strings, but preserve their sources. With the current caller-declared executor identity, write `identity_assurance: "caller_declared"` and `independence_verified: "unverified"`; never promote different strings to independent attestation. |
 | **No overwrite** | `REVIEW_STATE.json` is overwritten each round (only latest state). `ACQUITTAL_LOG.jsonl` is NEVER overwritten — it is the permanent, cumulative record. |
 
 **Why this exists:** `REVIEW_STATE.json` is overwritten each round. The log
-preserves evidence that a compatibility drive verdict or failed native attempt
-did not terminate by itself. A successful `copilot-native` verdict instead
-uses its host-event evidence sidecar.
+preserves evidence that a round which required external acquittal did not
+terminate by itself.
 
 ## Output Protocols
 
@@ -261,12 +182,12 @@ uses its host-event evidence sidecar.
    - If it exists AND `status` is `"in_progress"` AND `timestamp` is older than 24 hours: **fresh start** (stale state from a killed/abandoned run — delete the file and start over)
      - **Generate a new `run_id`** for this invocation.
    - If it exists AND `status` is `"in_progress"` AND `timestamp` is within 24 hours: **resume**
-     - Read the state file to recover `run_id`, `round`, `threadId` (or evidence/profile fields for Copilot backends), `reviewer_backend`, `last_score`, `pending_experiments`
-     - **Legacy backward compat**: if `reviewer_backend` is absent from the state file, default to `codex` (pre-copilot-era states did not record this field). If `requires_external_acquittal` is absent, default it to `false`; a legacy default-Codex run must not inherit the stricter Copilot-finalizer state. If `run_id` is absent from the state file (pre-run_id era), generate a new `run_id` and log: "No run_id in legacy state file; assigned run_<...> for this resume."
+     - Read the state file to recover `run_id`, `round`, `threadId`, `reviewer_backend`, `last_score`, `pending_experiments`
+     - **Legacy backward compat**: if `reviewer_backend` is absent from the state file, default to `codex`. If `requires_external_acquittal` is absent, default it to `false`. If `run_id` is absent from the state file (pre-run_id era), generate a new `run_id` and log: "No run_id in legacy state file; assigned run_<...> for this resume."
      - Read `review-stage/AUTO_REVIEW.md` to restore full context of prior rounds *(fall back to `./AUTO_REVIEW.md`)*
      - If `pending_experiments` is non-empty, check if they have completed (e.g., check screen sessions)
      - Resume from the next round (round = saved round + 1)
-     - Use `reviewer_backend` to determine continuation: `codex-reply` for codex; a fresh marker/challenge/rubber-duck/evidence cycle for `copilot-native`; a fresh `copilot --agent` subprocess with the saved profile/model for compatibility `copilot`; `manual_review_reply` for manual
+     - Use `reviewer_backend` to determine continuation: `codex-reply` for codex; `manual_review_reply` for manual
      - Log: "Recovered from context compaction. Resuming at Round N."
 2. Read project narrative documents, memory files, and any prior review documents. **When `COMPACT = true` and compact files exist**: read `findings.md` + `EXPERIMENT_LOG.md` instead of full `review-stage/AUTO_REVIEW.md` and raw logs — saves context window.
 3. Read recent experiment results (check output directories, logs)
@@ -274,34 +195,12 @@ uses its host-event evidence sidecar.
 5. Initialize round counter = 1 (unless recovered from state file)
 6. Create/update `review-stage/AUTO_REVIEW.md` with header and timestamp
 7. If this is a fresh run with no inline or project reviewer backend, initialize
-   REVIEWER_BACKEND to `auto`. Step -1 of Round 1 performs activation and uses
-   that same challenge for the review. Inline or project reviewer selections initialize
-   their selected backend and bypass activation. Do not use environment
-   heuristics.
+   REVIEWER_BACKEND to `codex`. Inline or project reviewer selections initialize
+   their selected backend. Do not use environment heuristics.
 
 ### Loop (repeat up to MAX_ROUNDS)
 
-**Step -1 — Resolve the automatic backend and prepare one native challenge:**
-
-- If REVIEWER_BACKEND is `auto`, resolve the native helper and run one root
-  `marker` call followed by one root `challenge` call. Use binding
-  `<run_id>_r<round>_review_<8-random-hex>` and output
-  `review-stage/COPILOT_NATIVE_<run_id>_ROUND_<round>_REVIEW.challenge.json`.
-  A bound challenge sets REVIEWER_BACKEND to `copilot-native` and
-  NATIVE_CHALLENGE to that path. Exit 3/unbound sets REVIEWER_BACKEND to
-  `codex`. Any other failure follows the fail-closed capability rules.
-- If REVIEWER_BACKEND is already `copilot-native` (a later round or a resumed
-  run), create one fresh marker/challenge pair with the same run-scoped naming
-  pattern and set NATIVE_CHALLENGE. An unbound or invalid challenge cannot be
-  treated as a verdict or silently relabeled.
-- Explicit external or compatibility backends do nothing in this step.
-
-The challenge created here is the challenge consumed by Phase A. **Do not run
-another marker/challenge for the same review.** Run-scoped filenames are
-append-only audit identities; never pass `--replace` to reuse evidence from an
-older invocation.
-
-**Step 0 — Snapshot current-round state:** After Step -1 resolves `auto`, set `round_backend = <current REVIEWER_BACKEND>` and `round_requires_external_acquittal = <current requires_external_acquittal, default false>`. These variables label the backend and obligation that actually governed the CURRENT round. If compatibility-drive escalation occurs later in Phase B.5.1 (`copilot` → codex/manual), the snapshots retain their pre-escalation values while the forward-looking state is updated for the NEXT round. A native dispatch failure is different because no review occurred: replace both snapshots with the external fallback values before that reviewer call, as specified in Phase A. A successful native call never sets the finalizer obligation. Phase E uses only the resulting snapshots when documenting or writing a finalizer receipt.
+**Step 0 — Snapshot current-round state:** Set `round_backend = <current REVIEWER_BACKEND>` and `round_requires_external_acquittal = <current requires_external_acquittal, default false>`. These variables label the backend and obligation that actually governed the CURRENT round. If an escalation occurs later in Phase B.5.1, the snapshots retain their pre-escalation values while the forward-looking state is updated for the NEXT round. Phase E uses only the resulting snapshots when documenting or writing a finalizer receipt.
 
 #### Phase A: Review
 
@@ -310,79 +209,7 @@ older invocation.
 For `antigravity`, `grok`, or `claude-code`, use the calling convention above
 and preserve the prompts below. Complete the selected call, save its raw
 response and actual reported model, then proceed to Phase B. Do not fall through
-to Codex, Copilot, or `codex exec` after selecting another route.
-
-If REVIEWER_BACKEND = `copilot-native`, execute one fresh native cycle:
-
-1. Use NATIVE_CHALLENGE prepared by Step -1. It must be the run-scoped
-   `..._ROUND_<round>_REVIEW.challenge.json` artifact created in this round.
-   Do not issue a second marker/challenge here.
-2. Read the returned nonce. Call the host Task tool with
-   `agent_type: rubber-duck`, a fresh name, and a prompt whose first line is
-   exactly `ARIS_REVIEW_NONCE=<nonce>`. Supply paths to claims, methods/code,
-   raw results, diff/current inputs, and reviewer memory—not an executor
-   summary. Require exactly one `Score: X/10` and `Verdict: ready | almost |
-   not ready` plus ranked weaknesses/minimum fixes/memory update. Do not pass a
-   model override: Copilot's complementary strategy selects it.
-3. After Task completes, run `python3 "<resolved-helper>" verify --challenge
-   "$NATIVE_CHALLENGE" --output
-   "review-stage/COPILOT_NATIVE_<run_id>_ROUND_<round>_REVIEW.evidence.json"
-   --response-output
-   "review-stage/COPILOT_NATIVE_<run_id>_ROUND_<round>_REVIEW.response.md"` in a new root Bash
-   call. Use only the extracted response artifact for Phase B.
-4. Exit 10 (same/unknown family), incomplete lifecycle, invalid response, or
-   unavailable complementary model is not a review. Apply the opposite-family
-   fallback table in `reviewer-routing.md`; if none is positively available,
-   emit `REVIEW_UNAVAILABLE`. Never emulate rubber-duck using a slash prompt,
-   `copilot --agent rubber-duck`, or generic subagent. Trace a pre-evidence
-   dispatch failure as `--backend copilot-native --status error` without
-   evidence, then trace the actual fallback separately; this error trace has no
-   authority at the stop gate. Before fallback, run
-   `copilot_native_evidence.py validate-challenge --challenge
-   "$NATIVE_CHALLENGE"` and take EXECUTOR_MODEL only from that output. Then:
-   - Anthropic/Google executor + usable Codex → set both REVIEWER_BACKEND and
-     `round_backend` to `codex` before the external call.
-   - OpenAI executor + manual reviewer reporting a known non-OpenAI model → set
-     both values to `manual` before the external call.
-   - Set `round_requires_external_acquittal=true` for either fallback, clear
-     NATIVE_EVIDENCE, and pass the validated executor model plus the fallback's
-     resolved reviewer model to `review_gate.py`. This deliberately uses the
-     stricter external-finalizer branch, which re-derives and enforces different
-     families. If the external call does not return a usable review, emit
-     `REVIEW_UNAVAILABLE`.
-
-If REVIEWER_BACKEND = `copilot`, enforce opposite-family routing from the declared executor identity FIRST:
-- Require `--executor-model <model>` parameter. If missing → `REVIEW_UNAVAILABLE`. Stop.
-- Derive `executor_family` from `executor_model`:
-  - Model names containing `gpt`, `o1`, `o3`, `o4`, `chatgpt` → `openai`
-  - Model names containing `claude`, `sonnet`, `opus`, `haiku` → `anthropic`
-  - Model names containing `gemini` → `google`
-  - Anything else → `unknown`
-- If `executor_family` is `unknown` → `REVIEW_UNAVAILABLE` (fail closed). Stop.
-- Treat this as route selection, not attestation: persist
-  `executor_model_source: caller-declared`; a derived `family_relation:
-  different` remains `independence_verified: unverified` unless a future
-  stable runtime signal independently proves the parent executor model.
-- Router picks opposite-family profile:
-  - `openai` → `"aris-reviewer-claude"` (anthropic, forced cross-family)
-  - `anthropic` → `"aris-reviewer-openai"` (openai, forced cross-family)
-  - `google` → `"aris-reviewer-openai"` (openai default)
-- Verify the profile file exists at `.github/agents/<profile>.agent.md`.
-  If missing → `REVIEW_UNAVAILABLE`. Stop.
-- Read the profile's first frontmatter `model:` value, derive its family, and
-  verify it is known and differs from `executor_family`. If not, fail closed.
-- Verify `copilot --help` exposes `--model`, `--effort`, and `--allow-tool`.
-  Older/unpinned CLIs are `REVIEW_UNAVAILABLE`.
-- Adapt the Codex MCP calls below to use the **`copilot --agent`** subprocess
-  (documented Copilot CLI form):
-  - Replace `mcp__codex__codex` with `copilot --agent "<profile>" --model "<parsed-model>" --effort xhigh --allow-tool=read --prompt "..."`
-  - Each round is a fresh `copilot --agent` call with the same profile +
-    `review-stage/REVIEWER_MEMORY.md` artifact carrying round-to-round state.
-  - The prompt text and Review Tracing are identical to the Codex path.
-  - If `copilot` CLI is unavailable → `REVIEW_UNAVAILABLE` (no MCP fallback).
-  - If `REVIEWER_DIFFICULTY = nightmare`, skip Copilot (nightmare requires Codex
-    exec): emit `REVIEW_UNAVAILABLE`.
-  See `shared-references/reviewer-routing.md`.
+to Codex or `codex exec` after selecting another route.
 
 **If REVIEWER_BACKEND ∈ {codex, manual}:** use the backend-specific MCP call per the
 Reviewer Calling Convention above. The prompt text is the same regardless of backend.
@@ -577,7 +404,7 @@ PROMPT
 
 #### Phase B: Parse Assessment
 
-**CRITICAL: Save the FULL raw response** from the reviewer verbatim (store in a variable for Phase E). For `copilot-native`, this must be the response artifact extracted by the evidence helper, never text copied by the executor. Do NOT discard or summarize — the raw text is the primary record.
+**CRITICAL: Save the FULL raw response** from the reviewer verbatim (store in a variable for Phase E). Do NOT discard or summarize — the raw text is the primary record.
 
 Then extract structured fields:
 - **Score** (numeric 1-10)
@@ -586,7 +413,7 @@ Then extract structured fields:
 
 #### Phase B.5: Reviewer Memory Update
 
-After parsing the assessment, append to the canonical memory artifact at `review-stage/REVIEWER_MEMORY.md`. Both Copilot backends depend on this file for round-to-round continuity (each native subagent or compatibility subprocess is fresh), so the update runs regardless of `REVIEWER_DIFFICULTY`. No project-root fallback is permitted; create `review-stage/` before the first append:
+After parsing the assessment, append to the canonical memory artifact at `review-stage/REVIEWER_MEMORY.md`. The reviewer depends on this file for round-to-round continuity, so the update runs regardless of `REVIEWER_DIFFICULTY`. No project-root fallback is permitted; create `review-stage/` before the first append:
 
 ```markdown
 # Reviewer Memory
@@ -674,13 +501,6 @@ case "$round_backend" in
     [[ "${REVIEW_SCOPE_COMPLETE:-false}" != true ]] || GATE_ARGS+=(--review-scope-complete)
     ;;
 esac
-if [[ "$round_backend" == "copilot-native" ]]; then
-  [[ -n "${NATIVE_EVIDENCE:-}" ]] || {
-    echo "REVIEW_UNAVAILABLE: native round has no evidence artifact" >&2
-    exit 1
-  }
-  GATE_ARGS+=(--native-evidence "$NATIVE_EVIDENCE")
-fi
 if [[ "$round_requires_external_acquittal" == "true" ]]; then
   GATE_ARGS+=(--requires-external-acquittal)
 fi
@@ -709,21 +529,12 @@ Parse `GATE_JSON` as JSON; never infer a transition from the helper's prose
   returns `review_unavailable`; a negative continues. A qualifying positive may
   stop with `same-family / provisional` or `cross-family / accepted`, as returned
   by the gate. Persist those values; the transport name does not establish family.
-- **Default Codex compatibility (`round_backend = codex`, `round_requires_external_acquittal = false`):** score >= 6 AND verdict ∈ {"ready", "almost"} stops exactly as it did before this Copilot integration. Executor identity is advisory trace metadata and may be absent; do not turn a valid default-Codex positive verdict into `REVIEW_UNAVAILABLE`. This path does not write an external-finalizer receipt.
-- **Existing Oracle/Agy routes:** when explicitly selected outside a Copilot-finalizer state, their qualifying positive verdicts retain the same pre-Copilot stop behavior. They are not valid substitutes once `requires_external_acquittal=true`; that state permits only Codex/manual.
+- **Default Codex (`round_backend = codex`, `round_requires_external_acquittal = false`):** score >= 6 AND verdict ∈ {"ready", "almost"} stops. Executor identity is advisory trace metadata and may be absent; do not turn a valid default-Codex positive verdict into `REVIEW_UNAVAILABLE`. This path does not write an external-finalizer receipt.
+- **Existing Oracle/Agy routes:** when explicitly selected outside an external-acquittal state, their qualifying positive verdicts retain their existing stop behavior. They are not valid substitutes once `requires_external_acquittal=true`; that state permits only Codex/manual.
 - **Explicit manual backend:** a positive verdict still requires the response's exact `Reviewer-Model:` header. Missing identity is `REVIEW_UNAVAILABLE`.
-- **Native Copilot round (`round_backend = copilot-native`):** the evidence
-  artifact is mandatory and revalidated by the gate. Its response-derived
-  Score/Verdict must equal the CLI fields. A qualifying positive returns
-  `decision: stop` with `identity_assurance: host_event_verified`; a negative
-  returns `continue` on `copilot-native`. No external-finalizer state is set.
-- **Compatibility Copilot drive round (`round_backend = copilot`):** this path never stops the loop. A negative verdict continues on compatibility Copilot. A positive verdict returns `decision: escalate`, sets `requires_external_acquittal: true`, and chooses the next backend from the caller-declared executor family:
-  - `anthropic` or `google` → Codex when available, otherwise manual;
-  - `openai` → manual only (Codex would be same-family);
-  - `unknown` or no policy-approved finalizer → `REVIEW_UNAVAILABLE`.
 - **External-finalizer round (`round_requires_external_acquittal = true`):** Codex/manual may stop on a qualifying positive verdict only when the model strings derive to known, different families; manual also requires its reported model header. This is fail-closed route consistency, not independent executor attestation. Record `identity_assurance: caller_declared` and `independence_verified: "unverified"`. A negative finalizer verdict continues on the same finalizer backend with the obligation still true.
 
-On compatibility Copilot escalation, update the forward-looking `reviewer_backend` and `requires_external_acquittal` in `REVIEW_STATE.json`; keep `round_backend` and `round_requires_external_acquittal` unchanged for Phase E. Once a finalizer returns a qualifying positive verdict, set the forward flag to false and stop. `ACQUITTAL_LOG.jsonl` is an append-only audit receipt, never an input that lets a later compatibility Copilot verdict stop the loop. Native evidence is evaluated directly and never consults that log.
+On escalation, update the forward-looking `reviewer_backend` and `requires_external_acquittal` in `REVIEW_STATE.json`; keep `round_backend` and `round_requires_external_acquittal` unchanged for Phase E. Once a finalizer returns a qualifying positive verdict, set the forward flag to false and stop. `ACQUITTAL_LOG.jsonl` is an append-only audit receipt, never an input that lets a later verdict stop the loop.
 
 This evaluation runs AFTER Phase B.5 so the terminal-round memory is always appended to `review-stage/REVIEWER_MEMORY.md` before exit.
 
@@ -760,54 +571,6 @@ Check this ruling's completion/scope, save its raw response, and rerun the gate
 on the updated Score/Verdict and actual model before persisting a stop decision.
 
 *Hard mode — use the selected backend for the rebuttal step:*
-
-*For copilot-native:* run a fresh marker/challenge and invoke a fresh native
-`rubber-duck` Task. Give it paths to `review-stage/REVIEWER_MEMORY.md`, the raw
-review response, and `review-stage/ROUND_${ROUND}_REBUTTAL.md`; require it to
-verify the cited files itself and return its updated Score/Verdict. Verify this
-verdict-bearing ruling with distinct run-scoped
-`..._ROUND_<round>_REBUTTAL.challenge.json`, `.evidence.json`, and
-`.response.md` artifacts. Use that evidence (not the pre-debate evidence) in
-the stop gate and trace.
-
-*For compatibility copilot:* fresh `copilot --agent` subprocess with the same profile + `review-stage/REVIEWER_MEMORY.md` context:
-```bash
-# Store the generated rebuttal as data; never paste memory/rebuttal text into
-# a heredoc body, because either may contain a line matching its delimiter.
-MEMORY_FILE="review-stage/REVIEWER_MEMORY.md"
-REBUTTAL_FILE="review-stage/ROUND_${ROUND}_REBUTTAL.md"
-[[ -f "$MEMORY_FILE" && -f "$REBUTTAL_FILE" ]] || {
-  echo "REVIEW_UNAVAILABLE: missing memory or rebuttal artifact" >&2
-  exit 1
-}
-PROMPTFILE="$(mktemp)" || { echo "REVIEW_UNAVAILABLE: mktemp failed" >&2; exit 1; }
-trap 'rm -f "$PROMPTFILE"' EXIT
-{
-cat <<'ARIS_REBUTTAL_HEADER'
-[Rebuttal ruling — same reviewer]
-
-## Your Memory From Previous Rounds
-ARIS_REBUTTAL_HEADER
-cat -- "$MEMORY_FILE"
-cat <<'ARIS_REBUTTAL_MIDDLE'
-
-The author rebuts your review:
-ARIS_REBUTTAL_MIDDLE
-cat -- "$REBUTTAL_FILE"
-cat <<'ARIS_REBUTTAL_FOOTER'
-
-For each rebuttal, rule:
-- SUSTAINED (author's argument is valid, withdraw this weakness)
-- OVERRULED (your original criticism stands, explain why)
-- PARTIALLY SUSTAINED (revise the weakness to a narrower scope)
-
-Then update your score if any weaknesses were withdrawn.
-Include a Memory Update section at the end of your response.
-ARIS_REBUTTAL_FOOTER
-} > "$PROMPTFILE"
-copilot --agent "$REVIEWER_PROFILE" --model "$REVIEWER_MODEL" \
-  --effort xhigh --allow-tool=read --prompt "$(cat "$PROMPTFILE")"
-```
 
 *For codex:*
 ```
@@ -978,17 +741,13 @@ For a positive stop on `antigravity`, `grok`, or `claude-code`, append one
 `ACQUITTAL_LOG.jsonl` receipt with this run/round/backend, actual model/effort,
 score/verdict, gate independence/acceptance, and actual trace path. It is an
 audit record of this round, not an input granting later acceptance. A provisional
-stop must stay labeled provisional. The existing Copilot finalizer receipt below
-is separate and unchanged.
+stop must stay labeled provisional.
 
 **Backend labeling for the state file:** The `reviewer_backend` field in `REVIEW_STATE.json` controls the continuation mechanism for the NEXT round (used on resume), not the round just documented. During Phase E:
-- Use `round_backend` (snapshotted at round start, step 0) to label the CURRENT round in `AUTO_REVIEW.md` documentation (e.g., "Reviewer backend: copilot-native").
-- Use `round_requires_external_acquittal` to decide whether the CURRENT round was a Copilot-triggered finalizer. Write `requires_external_acquittal` in state as the forward-looking obligation for the NEXT round.
+- Use `round_backend` (snapshotted at round start, step 0) to label the CURRENT round in `AUTO_REVIEW.md` documentation (e.g., "Reviewer backend: codex").
+- Use `round_requires_external_acquittal` to decide whether the CURRENT round was an external-finalizer round. Write `requires_external_acquittal` in state as the forward-looking obligation for the NEXT round.
 - Write `reviewer_backend` in `REVIEW_STATE.json` to the value that should control the NEXT round — this is either (a) unchanged from the current round's backend if no escalation occurred, or (b) the escalation backend set during Phase B.5.1. Never substitute `round_backend` for this forward-looking field.
 - When no escalation happened, `round_backend == reviewer_backend` (trivially safe).
-- For a native round, persist `native_evidence_id`, `native_evidence_path`, both
-  host-event model IDs/sources, `family_relation: different`, and
-  `identity_assurance: host_event_verified`. Never copy these fields from prose.
 
 **If `round_backend ∈ {codex, manual}` AND `round_requires_external_acquittal = true` AND score >= 6 AND verdict ∈ {"ready", "almost"}:** append one external-finalizer line to `review-stage/ACQUITTAL_LOG.jsonl`:
 ```
@@ -1011,8 +770,8 @@ When loop ends (positive assessment or max rounds):
 1. Update `review-stage/REVIEW_STATE.json` with `"status": "completed"`
 2. Write final summary to `review-stage/AUTO_REVIEW.md`
 3. Update project notes with conclusions
-4. **Write method/pipeline description** to `review-stage/AUTO_REVIEW.md` under a `## Method Description` section — a concise 1-2 paragraph description of the final method, its architecture, and data flow. This serves as input for `/paper-illustration` in Workflow 3 (so it can generate architecture diagrams automatically).
-5. **Generate claims from results** — invoke `/result-to-claim` to convert experiment results from `review-stage/AUTO_REVIEW.md` into structured paper claims. Output: `CLAIMS_FROM_RESULTS.md`. This bridges Workflow 2 → Workflow 3 so `/paper-plan` can directly use validated claims instead of extracting them from scratch. If `/result-to-claim` is not installed, skip this step (no `CLAIMS_FROM_RESULTS.md` is produced; `/paper-plan` extracts claims from the narrative as before) — but NEVER fabricate the file or its verdict. If it ran but its output starts with `verdict: REVIEW_UNAVAILABLE`, keep that file AS-IS (do not overwrite or paraphrase it) and record in `AUTO_REVIEW.md` that claims are UNADJUDICATED — downstream paper stages must not treat them as validated.
+4. **Write method/pipeline description** to `review-stage/AUTO_REVIEW.md` under a `## Method Description` section — a concise 1-2 paragraph description of the final method, its architecture, and data flow. This is reference material for any downstream diagram work.
+5. **Generate claims from results** — invoke `/result-to-claim` to convert experiment results from `review-stage/AUTO_REVIEW.md` into structured paper claims. Output: `CLAIMS_FROM_RESULTS.md`. This hands validated claims to downstream write-ups instead of making them extract claims from scratch. If `/result-to-claim` is not installed, skip this step (no `CLAIMS_FROM_RESULTS.md` is produced) — but NEVER fabricate the file or its verdict. If it ran but its output starts with `verdict: REVIEW_UNAVAILABLE`, keep that file AS-IS (do not overwrite or paraphrase it) and record in `AUTO_REVIEW.md` that claims are UNADJUDICATED — downstream paper stages must not treat them as validated.
 6. If stopped at max rounds without positive assessment:
    - List remaining blockers
    - Estimate effort needed for each
@@ -1029,15 +788,8 @@ When loop ends (positive assessment or max rounds):
 - **Large file handling**: If the Write tool fails due to file size, immediately retry using Bash (`cat << 'EOF' > file`) to write in chunks. Do NOT ask the user for permission — just do it silently.
 
 - **Codex backend:** pin `model: gpt-6-astra` + `config: {"model_reasoning_effort": "xhigh"}` on the first call of every thread. `xhigh` is this loop's **regular tier** per [`reviewer-routing.md`](../shared-references/reviewer-routing.md), not the maximum — `ultra` belongs to the one-shot deep-audit skills and is slower and costlier per round. Do not raise this loop's tier; replies inherit the thread's pair, so changing it means a new thread. Follow the capability-fallback chain only for explicit capability errors.
-- **Native Copilot is an evidence-gated acceptance backend.** It never pins a
-  reviewer model: Copilot selects the complementary rubber-duck model, and the
-  helper verifies the actual cross-family pair from host events. A native
-  positive needs no external finalizer.
-- **Explicit compatibility Copilot remains drive-only.** Its `copilot --agent`
-  calls pin profile model/xhigh/read-only access and require a traced
-  Codex/manual finalizer; caller-declared identity remains unverified.
-- Save `threadId` (codex/manual), fresh evidence path/ID (`copilot-native`), or `reviewer_profile` (compatibility copilot); use the appropriate continuation mechanism
-- **Anti-hallucination citations**: When adding references during fixes, NEVER fabricate BibTeX. Use the same DBLP → CrossRef → `[VERIFY]` chain as `/paper-write`: (1) `curl -s "https://dblp.org/search/publ/api?q=TITLE&format=json"` → get key → `curl -s "https://dblp.org/rec/{key}.bib"`, (2) if not found, `curl -sLH "Accept: application/x-bibtex" "https://doi.org/{doi}"`, (3) if both fail, mark with `% [VERIFY]`. Do NOT generate BibTeX from memory.
+- Save `threadId` (codex/manual); use the appropriate continuation mechanism
+- **Anti-hallucination citations**: When adding references during fixes, NEVER fabricate BibTeX. Use the standard anti-hallucination DBLP → CrossRef → `[VERIFY]` chain: (1) `curl -s "https://dblp.org/search/publ/api?q=TITLE&format=json"` → get key → `curl -s "https://dblp.org/rec/{key}.bib"`, (2) if not found, `curl -sLH "Accept: application/x-bibtex" "https://doi.org/{doi}"`, (3) if both fail, mark with `% [VERIFY]`. Do NOT generate BibTeX from memory.
 - Be honest — include negative results and failed experiments
 - Do NOT hide weaknesses to game a positive score
 - Implement fixes BEFORE re-reviewing (don't just promise to fix)
@@ -1048,87 +800,13 @@ When loop ends (positive assessment or max rounds):
 
 ## Prompt Template for Round 2+
 
-Use the selected backend. *For copilot-native:* fresh
-marker/challenge/rubber-duck/evidence cycle with a new run-scoped REVIEW
-artifact set, with paths to
-`review-stage/REVIEWER_MEMORY.md` and current inputs. *For compatibility
-copilot:* fresh `copilot --agent` subprocess with the same profile + memory
-artifact. *For codex:* `mcp__codex__codex-reply` with the saved threadId. *For
+Use the selected backend. *For codex:* `mcp__codex__codex-reply` with the saved threadId. *For
 manual:* `mcp__manual_review__review_reply` with the saved threadId. *For
 antigravity/grok/claude-code:* use the saved route's continuation tool and fixed
 session options from `reviewer-backends.md`, with the same changed-file and
 raw-result inputs; repeat Claude cwd/tools.
 
-Before invoking the Copilot subprocess, use the **Write tool** (not Bash,
-`echo`, a heredoc, or generated shell assignments) to overwrite
-`review-stage/CURRENT_REVIEW_INPUTS.md`. Put the exact changed paths, diff
-artifact/range, and result paths under static labels in that file. Repository
-paths are untrusted data: never splice any byte from this artifact into shell
-source. The fixed filename below is the only value the shell template needs.
-
 ```
-[For copilot:]
-
-# ARIS_ROUND2_COPILOT_BEGIN
-# Dynamic values were written with the Write tool; shell only reads them as data.
-MEMORY_FILE="review-stage/REVIEWER_MEMORY.md"
-ROUND_INPUT_FILE="review-stage/CURRENT_REVIEW_INPUTS.md"
-[[ -f "$MEMORY_FILE" && -f "$ROUND_INPUT_FILE" ]] || {
-  echo "REVIEW_UNAVAILABLE: missing reviewer memory or round inputs" >&2
-  exit 1
-}
-PROMPTFILE="$(mktemp)" || { echo "REVIEW_UNAVAILABLE: mktemp failed" >&2; exit 1; }
-trap 'rm -f "$PROMPTFILE"' EXIT
-{
-cat <<'ARIS_ROUND_HEADER'
-[Round N update]
-
-## Your Memory From Previous Rounds
-ARIS_ROUND_HEADER
-cat -- "$MEMORY_FILE"
-cat <<'ARIS_ROUND_STATE'
-
-Since your last review these files changed — read them yourself; do not
-take my word for what changed or whether it worked:
-ARIS_ROUND_STATE
-cat -- "$ROUND_INPUT_FILE"
-cat <<'ARIS_ROUND_INSTRUCTIONS'
-
-Please re-score and re-assess. Are the remaining concerns addressed?
-Same format: Score, Verdict, Remaining Weaknesses, Minimum Fixes.
-
-=== SCOPE LIMITS (these bound what you PROPOSE, never what you look for) ===
-Report anything that is actually wrong here — including a rare-looking case, if
-this repo actually produces it. Then keep the fix in scope:
-1. This is a RESEARCH-WORKFLOW tool, not a security paper. Verification is
-   welcome; over-defense is not. Assume a cooperating operator on their own
-   machine — a malicious local user is NOT in the threat model.
-2. Do NOT propose SHA / hash / content-fingerprint / digest-binding schemes.
-   Reporting a real defect in hashing code that already exists is fine.
-3. NO speculative machinery: do not add feature flags, migration frameworks,
-   compat layers, wrappers, pins, or similar mechanisms unless evidence shows
-   a current repo defect they fix or an explicit existing invariant they must
-   preserve. "Load-bearing", "compatibility", and "not scaffolding" are labels,
-   not evidence. Point to the failing path/artifact or invariant, and check the
-   proposal's factual premises, such as whether a named package version exists.
-4. NO corner-case obsession: exotic encodings, symlink races, RTL text and
-   millisecond races are out of scope unless you can show the case arises here.
-5. Where a rubric or checklist is genuinely needed, do not over-mechanize
-   judgement. A clear sentence a human reads beats a scored table nobody
-   maintains.
-Exception: code that runs remote commands, starts a network service, or installs
-an MCP server runs on the user's machine with their credentials — trust-boundary
-findings there are in scope and the default is strict.
-Say plainly when something is correct. Do not manufacture findings.
-
-At the end of your review, include a Memory Update section — this will
-be passed back to you next round.
-ARIS_ROUND_INSTRUCTIONS
-} > "$PROMPTFILE"
-copilot --agent "$REVIEWER_PROFILE" --model "$REVIEWER_MODEL" \
-  --effort xhigh --allow-tool=read --prompt "$(cat "$PROMPTFILE")"
-# ARIS_ROUND2_COPILOT_END
-
 [For codex:] mcp__codex__codex-reply:
   threadId: [saved from round 1]
   # inherits the thread's model/effort — do not re-send
@@ -1171,15 +849,9 @@ copilot --agent "$REVIEWER_PROFILE" --model "$REVIEWER_MODEL" \
 
 ## Review Tracing
 
-After each reviewer call (`task(agent_type=rubber-duck)` for `copilot-native`,
-any selected MCP call, or the compatibility `copilot --agent` subprocess),
-save the trace following `shared-references/review-tracing.md` (Policy C —
-forensic; never silently skip). Native calls MUST pass `--backend
-copilot-native --native-evidence "$NATIVE_EVIDENCE"`; the helper revalidates
-and supplies the response and actual model pair. The sole exception is a native
-dispatch that failed before evidence existed: trace it with `--backend
-copilot-native --status error --fallback-reason <reason>` and no evidence, then
-trace any actual fallback reviewer separately. Use `save_trace.sh` resolved
+After each reviewer call (any selected MCP call), save the trace following
+`shared-references/review-tracing.md` (Policy C — forensic; never silently
+skip). Use `save_trace.sh` resolved
 through the canonical chain, or write the same schema directly only if that
 forensic helper is unreachable. Respect `--- trace:` (default `full`).
 For the new MCP routes, include requested and reported model, actual effort,
@@ -1193,19 +865,10 @@ The canonical transition table is `tools/review_gate.py` in the ARIS repository 
 
 1. Default Codex positive → `stop` even when executor model identity is absent (backward compatibility).
 2. High score + `not ready` → `continue`.
-3. Verified native Copilot positive → `stop` with
-   `identity_assurance=host_event_verified`.
-4. Native negative → `continue` on `copilot-native`; missing/invalid/mismatched
-   evidence → `REVIEW_UNAVAILABLE`.
-5. Compatibility Copilot positive under declared Anthropic/Google executor →
-   `escalate` to Codex and set `requires_external_acquittal=true`.
-6. Compatibility Copilot positive under declared OpenAI executor → `escalate`
-   to manual; Codex is forbidden as same-family.
-7. Compatibility Copilot negative → `continue` on compatibility Copilot.
-8. Unknown executor family, unavailable finalizer, same-family finalizer, or
+3. Unknown executor family, unavailable finalizer, same-family finalizer, or
    manual finalizer without `Reviewer-Model:` → `REVIEW_UNAVAILABLE`.
-9. Positive finalizer with known, different declared families → `stop`, while
+4. Positive finalizer with known, different declared families → `stop`, while
    identity assurance remains `caller_declared` / `unverified`.
 
-`ACQUITTAL_LOG.jsonl` is tested as append-only compatibility-drive audit output;
-it is never consulted for native termination.
+`ACQUITTAL_LOG.jsonl` is tested as append-only audit output; it is never an
+input to termination.

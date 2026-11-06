@@ -98,7 +98,7 @@ WIKI_SCRIPT=".aris/tools/research_wiki.py"
   echo "WARN: research_wiki.py not found at .aris/tools/, tools/, \$ARIS_REPO/tools/, or via ~/.aris/repo." >&2
   echo "      The idea-creation primary output (idea ranking) will still be produced." >&2
   echo "      Wiki writes and query_pack rebuilds will be skipped; a fresh cached pack may still be loaded through the scanner." >&2
-  echo "      Fix: rerun 'bash tools/install_aris.sh' or 'smart_update.sh' (refreshes ~/.aris/repo), export ARIS_REPO, or 'cp <ARIS-repo>/tools/research_wiki.py tools/'." >&2
+  echo "      Fix: rerun 'bash tools/install_aris.sh' (refreshes ~/.aris/repo), export ARIS_REPO, or 'cp <ARIS-repo>/tools/research_wiki.py tools/'." >&2
   WIKI_SCRIPT=""
 }
 
@@ -558,7 +558,7 @@ if research-wiki/ exists AND [ -n "$WIKI_SCRIPT" ]:
           || echo "WARN: upsert_idea failed for <id> (continuing; audit/report unaffected)" >&2
     python3 "$WIKI_SCRIPT" log research-wiki/ "idea-creator wrote N ideas (M recommended, K eliminated)"
 elif research-wiki/ exists AND [ -z "$WIKI_SCRIPT" ]:
-    echo "WARN: ideas NOT recorded — research_wiki.py unreachable (see Phase 0). Fix: bash tools/install_aris.sh or smart_update.sh (refreshes ~/.aris/repo), or export ARIS_REPO." >&2
+    echo "WARN: ideas NOT recorded — research_wiki.py unreachable (see Phase 0). Fix: bash tools/install_aris.sh (refreshes ~/.aris/repo), or export ARIS_REPO." >&2
 ```
 
 ## Output Protocols

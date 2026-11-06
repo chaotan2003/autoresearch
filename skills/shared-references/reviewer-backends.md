@@ -26,8 +26,8 @@ Supported routes:
 
 The aliases identify a transport, not proof of a model family. Always record the
 returned model. `agy` remains the older **gemini-review** route; it is not an
-alias for the separate Antigravity MCP. Existing `oracle-pro`, `manual`,
-`copilot`, and `copilot-native` contracts remain in `reviewer-routing.md`.
+alias for the separate Antigravity MCP. Existing `oracle-pro` and `manual` contracts
+remain in `reviewer-routing.md`.
 
 Resolve `tools/reviewer_route.py` through `integration-contract.md` §2. It is a
 local parser, not an MCP client; it never launches a review or changes settings.
@@ -40,10 +40,8 @@ python3 "$REVIEWER_ROUTE" --project "$PWD" --host codex --tier deep \
 ```
 
 Without an override, Claude Code retains Codex MCP and Codex retains its native
-reviewer. In the main pack's Copilot auto-review loop, apply the existing host
-marker protocol before supplying `copilot-native` as the host default; explicit
-or project selection takes precedence over that default. Do not probe Copilot
-when a different reviewer was already selected.
+reviewer. In the main pack's auto-review loop, explicit or project selection
+takes precedence over the host default.
 
 An inline backend override to a different provider discards that provider's
 project model/effort. An override to the same backend may inherit those fields.
@@ -135,8 +133,7 @@ For the three new MCP routes, auto-review loops call `review_gate.py` with the
 canonical backend, score/verdict, actual executor/reviewer models, and
 `--review-status ok --review-completed --review-scope-complete` **only after**
 checking those facts. Missing identity/completion/scope gives `review_unavailable`;
-a positive same-family review may stop the drive loop provisionally. Existing
-Copilot native evidence and compatibility-finalizer obligations remain unchanged.
+a positive same-family review may stop the drive loop provisionally.
 
 Trace every call using `review-tracing.md`. With `save_trace.sh`, record backend,
 tool, requested model, reported model, actual effort and session id. Add

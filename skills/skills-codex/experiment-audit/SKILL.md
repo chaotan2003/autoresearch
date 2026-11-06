@@ -246,7 +246,7 @@ Also write `EXPERIMENT_AUDIT.json` for machine consumption:
 
 ## Integration with Other Skills
 
-### Automatic in /research-pipeline (advisory, never blocks)
+### Automatic in a full pipeline run (advisory, never blocks)
 
 When integrated into the pipeline, this skill runs automatically after `/experiment-bridge` and before `/auto-review-loop`:
 
@@ -276,7 +276,7 @@ else:
     mark as "provisional — no integrity audit"
 ```
 
-### Read by /paper-write (if exists)
+### Read by downstream write-ups (if any)
 
 ```
 if EXPERIMENT_AUDIT.json exists AND integrity_status == "fail":

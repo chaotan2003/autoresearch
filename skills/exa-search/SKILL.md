@@ -96,7 +96,7 @@ EXA_FETCHER=".aris/tools/exa_search.py"
 [ -f "$EXA_FETCHER" ] || { [ -n "${ARIS_REPO:-}" ] && EXA_FETCHER="$ARIS_REPO/tools/exa_search.py"; }
 [ -f "$EXA_FETCHER" ] || {
   echo "ERROR: exa_search.py not resolved at .aris/tools/, tools/, \$ARIS_REPO/tools/, or via ~/.aris/repo." >&2
-  echo "       Fix: rerun bash tools/install_aris.sh or smart_update.sh (refreshes ~/.aris/repo), export ARIS_REPO, or copy the helper to tools/." >&2
+  echo "       Fix: rerun bash tools/install_aris.sh (refreshes ~/.aris/repo), export ARIS_REPO, or copy the helper to tools/." >&2
   echo "       Also ensure 'exa-py' is installed: pip install exa-py" >&2
   exit 1
 }
@@ -180,7 +180,7 @@ if [ -d research-wiki/ ] and query category was "research paper":
     [ -f "$WIKI_SCRIPT" ] || WIKI_SCRIPT="tools/research_wiki.py"
     [ -f "$WIKI_SCRIPT" ] || { [ -n "${ARIS_REPO:-}" ] && WIKI_SCRIPT="$ARIS_REPO/tools/research_wiki.py"; }
     [ -f "$WIKI_SCRIPT" ] || {
-      echo "WARN: research_wiki.py not found; exa-search results delivered, wiki ingest skipped. Fix: bash tools/install_aris.sh or smart_update.sh (refreshes ~/.aris/repo), export ARIS_REPO, or cp <ARIS-repo>/tools/research_wiki.py tools/." >&2
+      echo "WARN: research_wiki.py not found; exa-search results delivered, wiki ingest skipped. Fix: bash tools/install_aris.sh (refreshes ~/.aris/repo), export ARIS_REPO, or cp <ARIS-repo>/tools/research_wiki.py tools/." >&2
       WIKI_SCRIPT=""
     }
     [ -n "$WIKI_SCRIPT" ] && for each research-paper hit in results:

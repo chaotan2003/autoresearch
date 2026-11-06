@@ -42,10 +42,9 @@ set -euo pipefail
 # --- Parse arguments ---
 SKILL="" PURPOSE="" MODEL="" THREAD_ID="" PROMPT="" RESPONSE=""
 PROMPT_FILE="" RESPONSE_FILE="" TRACE_MODE="${ARIS_TRACE_MODE:-full}" EFFORT="" FALLBACK_REASON="" STATUS="ok"
-BACKEND="" TOOL="" EXECUTOR="" EXECUTOR_MODEL="" EXECUTOR_FAMILY="" REVIEWER_PROFILE="" REVIEWER_FAMILY="" INDEPENDENCE_VERIFIED=""
+BACKEND="" TOOL="" EXECUTOR="" EXECUTOR_MODEL="" EXECUTOR_FAMILY="" REVIEWER_FAMILY="" INDEPENDENCE_VERIFIED=""
 REQUESTED_REVIEWER_MODEL="" REPORTED_REVIEWER_MODEL="" MEMORY_HASH=""
 EXECUTOR_MODEL_SOURCE="unavailable" REVIEWER_MODEL_SOURCE="unavailable" FAMILY_RELATION="unknown"
-NATIVE_EVIDENCE="" NATIVE_EVIDENCE_ID="" NATIVE_EVIDENCE_PATH=""
 REVIEW_COMPLETED=false REVIEW_SCOPE_COMPLETE=false REVIEW_POSITIVE=false VERDICT=""
 REVIEW_INDEPENDENCE="unknown" ACCEPTANCE_STATUS="provisional"
 
@@ -68,13 +67,11 @@ while [[ $# -gt 0 ]]; do
     --executor)           EXECUTOR="$2";           shift 2 ;;
     --executor-model)     EXECUTOR_MODEL="$2";     shift 2 ;;
     --executor-family)    EXECUTOR_FAMILY="$2";    shift 2 ;;
-    --reviewer-profile)   REVIEWER_PROFILE="$2";   shift 2 ;;
     --reviewer-family)    REVIEWER_FAMILY="$2";    shift 2 ;;
     --requested-reviewer-model) REQUESTED_REVIEWER_MODEL="$2"; shift 2 ;;
     --reported-reviewer-model)  REPORTED_REVIEWER_MODEL="$2";  shift 2 ;;
     --independence-verified) INDEPENDENCE_VERIFIED="$2"; shift 2 ;;
     --memory-hash)        MEMORY_HASH="$2";        shift 2 ;;
-    --native-evidence)    NATIVE_EVIDENCE="$2";    shift 2 ;;
     --review-completed)   REVIEW_COMPLETED=true; shift ;;
     --review-scope-complete) REVIEW_SCOPE_COMPLETE=true; shift ;;
     --review-positive)    REVIEW_POSITIVE=true; shift ;;
@@ -113,60 +110,9 @@ CALLER_EXECUTOR_FAMILY="$EXECUTOR_FAMILY"
 CALLER_REVIEWER_FAMILY="$REVIEWER_FAMILY"
 CALLER_INDEPENDENCE_VERIFIED="$INDEPENDENCE_VERIFIED"
 
-if [[ "$(lowercase "$BACKEND")" == "copilot-native" ]]; then
-  [[ -n "$TOOL" ]] || TOOL="task(agent_type=rubber-duck)"
-  [[ -n "$EXECUTOR" ]] || EXECUTOR="copilot"
-  if [[ -z "$NATIVE_EVIDENCE" ]]; then
-    if [[ "$(lowercase "$STATUS")" != "error" ]]; then
-      echo "Error: successful --backend copilot-native traces require --native-evidence" >&2
-      exit 1
-    fi
-    # A dispatch can fail before any reviewer lifecycle/evidence exists. Keep
-    # that attempt traceable, but never promote caller model claims to host
-    # evidence or verified independence.
-    if [[ -n "$EXECUTOR_MODEL" ]]; then
-      EXECUTOR_MODEL_SOURCE="caller-declared"
-    fi
-  else
-    NATIVE_HELPER="$(dirname "$0")/copilot_native_evidence.py"
-    if [[ ! -f "$NATIVE_HELPER" ]]; then
-      echo "Error: copilot_native_evidence.py is unavailable beside save_trace.sh" >&2
-      exit 1
-    fi
-    NATIVE_JSON=$(python3 "$NATIVE_HELPER" validate --evidence "$NATIVE_EVIDENCE") || {
-      echo "Error: native Copilot evidence validation failed" >&2
-      exit 1
-    }
-    NATIVE_EXECUTOR_MODEL=$(ST_NATIVE_JSON="$NATIVE_JSON" python3 -c 'import json, os; print(json.loads(os.environ["ST_NATIVE_JSON"])["executor_model"], end="")')
-    NATIVE_REVIEWER_MODEL=$(ST_NATIVE_JSON="$NATIVE_JSON" python3 -c 'import json, os; print(json.loads(os.environ["ST_NATIVE_JSON"])["reviewer_model"], end="")')
-    NATIVE_EVIDENCE_ID=$(ST_NATIVE_JSON="$NATIVE_JSON" python3 -c 'import json, os; print(json.loads(os.environ["ST_NATIVE_JSON"])["evidence_id"], end="")')
-    NATIVE_RESPONSE_PATH=$(ST_NATIVE_JSON="$NATIVE_JSON" python3 -c 'import json, os; print(json.loads(os.environ["ST_NATIVE_JSON"])["response_path"], end="")')
-    if [[ -n "$EXECUTOR_MODEL" && "$EXECUTOR_MODEL" != "$NATIVE_EXECUTOR_MODEL" ]]; then
-      echo "Error: --executor-model disagrees with native host-event evidence" >&2
-      exit 1
-    fi
-    if [[ -n "$REPORTED_REVIEWER_MODEL" && "$REPORTED_REVIEWER_MODEL" != "$NATIVE_REVIEWER_MODEL" ]]; then
-      echo "Error: --reported-reviewer-model disagrees with native host-event evidence" >&2
-      exit 1
-    fi
-    if [[ -n "$MODEL" && "$MODEL" != "$NATIVE_REVIEWER_MODEL" ]]; then
-      echo "Error: --model disagrees with native host-event evidence" >&2
-      exit 1
-    fi
-    EXECUTOR_MODEL="$NATIVE_EXECUTOR_MODEL"
-    REPORTED_REVIEWER_MODEL="$NATIVE_REVIEWER_MODEL"
-    MODEL="$NATIVE_REVIEWER_MODEL"
-    RESPONSE_FILE="$NATIVE_RESPONSE_PATH"
-    EXECUTOR_MODEL_SOURCE="host-session-event"
-    REVIEWER_MODEL_SOURCE="host-session-event"
-    NATIVE_EVIDENCE_PATH=$(ST_PATH="$NATIVE_EVIDENCE" python3 -c 'import os; print(os.path.abspath(os.environ["ST_PATH"]))')
-  fi
-elif [[ -n "$NATIVE_EVIDENCE" ]]; then
-  echo "Error: --native-evidence is valid only with --backend copilot-native" >&2
-  exit 1
-elif [[ -n "$EXECUTOR_MODEL" ]]; then
-  # Copilot CLI exposes no stable parent-session attestation to this child
-  # helper.  The value is useful for routing, but remains caller-declared.
+if [[ -n "$EXECUTOR_MODEL" ]]; then
+  # No host-session attestation is available to this child helper; the value
+  # is useful for routing, but remains caller-declared.
   EXECUTOR_MODEL_SOURCE="caller-declared"
 fi
 
@@ -177,9 +123,7 @@ case "$(lowercase "$EFFECTIVE_REVIEWER_MODEL")" in
     [[ -n "$EFFECTIVE_REVIEWER_MODEL" ]] && REVIEWER_MODEL_SOURCE="requested"
     ;;
   *)
-    if [[ "$(lowercase "$BACKEND")" != "copilot-native" ]]; then
-      REVIEWER_MODEL_SOURCE="backend-reported"
-    fi
+    REVIEWER_MODEL_SOURCE="backend-reported"
     ;;
 esac
 
@@ -198,15 +142,9 @@ if [[ "$EXECUTOR_FAMILY" == "unknown" || "$REVIEWER_FAMILY" == "unknown" ]]; the
   INDEPENDENCE_VERIFIED="unverified"
 elif [[ "$EXECUTOR_FAMILY" != "$REVIEWER_FAMILY" ]]; then
   FAMILY_RELATION="different"
-  if [[ "$(lowercase "$BACKEND")" == "copilot-native" \
-        && "$EXECUTOR_MODEL_SOURCE" == "host-session-event" \
-        && "$REVIEWER_MODEL_SOURCE" == "host-session-event" ]]; then
-    INDEPENDENCE_VERIFIED="true"
-  else
-    # A different pair of model strings is a routing fact, not independent
-    # proof of the parent executor's actual model.
-    INDEPENDENCE_VERIFIED="unverified"
-  fi
+  # A different pair of model strings is a routing fact, not independent
+  # proof of the parent executor's actual model.
+  INDEPENDENCE_VERIFIED="unverified"
 else
   FAMILY_RELATION="same"
   INDEPENDENCE_VERIFIED="false"
@@ -225,7 +163,7 @@ if $REVIEW_COMPLETED && $REVIEW_SCOPE_COMPLETE && $REVIEW_POSITIVE && \
    [[ "$REVIEW_INDEPENDENCE" == "cross-family" ]] && \
    [[ "$REVIEWER_MODEL_SOURCE" == "backend-reported" || "$REVIEWER_MODEL_SOURCE" == "host-session-event" ]]; then
   case "$(lowercase "${BACKEND:-codex}")" in
-    codex|manual|copilot-native|oracle-pro|agy|llm-chat|antigravity|grok|claude-code)
+    codex|manual|oracle-pro|agy|llm-chat|antigravity|grok|claude-code)
       case "$(lowercase "$STATUS")" in
         ok|fallback_used|success|completed) ACCEPTANCE_STATUS="accepted" ;;
       esac
@@ -270,7 +208,7 @@ if [[ ! -f "${RUN_DIR}/run.meta.json" ]]; then
   ST_EXECUTOR_MODEL_SOURCE="$EXECUTOR_MODEL_SOURCE" ST_REVIEWER_MODEL_SOURCE="$REVIEWER_MODEL_SOURCE" \
   ST_REVIEWER_FAMILY="$REVIEWER_FAMILY" ST_REVIEWER_BACKEND="$BACKEND" \
   ST_FAMILY_RELATION="$FAMILY_RELATION" ST_INDEPENDENCE_VERIFIED="$INDEPENDENCE_VERIFIED" \
-  ST_NATIVE_EVIDENCE_ID="$NATIVE_EVIDENCE_ID" ST_NATIVE_EVIDENCE_PATH="$NATIVE_EVIDENCE_PATH" python3 -c '
+  python3 -c '
 import json, os
 e = os.environ
 raw_iv = (e.get("ST_INDEPENDENCE_VERIFIED") or "unverified").lower()
@@ -284,8 +222,6 @@ json.dump({"skill": e["ST_SKILL"], "run_id": e["ST_RUN_ID"],
            "reviewer_model_source": e.get("ST_REVIEWER_MODEL_SOURCE") or "unavailable",
            "reviewer_family": e.get("ST_REVIEWER_FAMILY") or None,
            "reviewer_backend": e.get("ST_REVIEWER_BACKEND") or None,
-           "native_evidence_id": e.get("ST_NATIVE_EVIDENCE_ID") or None,
-           "native_evidence_path": e.get("ST_NATIVE_EVIDENCE_PATH") or None,
            "family_relation": e.get("ST_FAMILY_RELATION") or "unknown",
            "independence_verified": iv,
            "project_dir": e["ST_PROJ"]},
@@ -308,19 +244,16 @@ if [[ "$TRACE_MODE" == "full" ]]; then
   ST_TOOL="$TOOL" ST_BACKEND="$BACKEND" \
   ST_EXECUTOR="${EXECUTOR:-claude-code}" ST_EXECUTOR_MODEL="$EXECUTOR_MODEL" ST_EXECUTOR_FAMILY="$EXECUTOR_FAMILY" \
   ST_EXECUTOR_MODEL_SOURCE="$EXECUTOR_MODEL_SOURCE" ST_REVIEWER_MODEL_SOURCE="$REVIEWER_MODEL_SOURCE" \
-  ST_REVIEWER_FAMILY="$REVIEWER_FAMILY" ST_REVIEWER_PROFILE="$REVIEWER_PROFILE" \
+  ST_REVIEWER_FAMILY="$REVIEWER_FAMILY" \
   ST_REQUESTED_REVIEWER_MODEL="$REQUESTED_REVIEWER_MODEL" ST_REPORTED_REVIEWER_MODEL="$REPORTED_REVIEWER_MODEL" \
   ST_FAMILY_RELATION="$FAMILY_RELATION" ST_INDEPENDENCE_VERIFIED="$INDEPENDENCE_VERIFIED" \
-  ST_MEMORY_HASH="$MEMORY_HASH" ST_NATIVE_EVIDENCE_ID="$NATIVE_EVIDENCE_ID" \
-  ST_NATIVE_EVIDENCE_PATH="$NATIVE_EVIDENCE_PATH" \
+  ST_MEMORY_HASH="$MEMORY_HASH" \
   ST_REVIEWER_MODEL="$EFFECTIVE_REVIEWER_MODEL" ST_REVIEW_INDEPENDENCE="$REVIEW_INDEPENDENCE" \
   ST_ACCEPTANCE_STATUS="$ACCEPTANCE_STATUS" ST_REVIEW_COMPLETED="$REVIEW_COMPLETED" \
   ST_REVIEW_SCOPE_COMPLETE="$REVIEW_SCOPE_COMPLETE" ST_REVIEW_POSITIVE="$REVIEW_POSITIVE" ST_VERDICT="$VERDICT" \
   ST_OUT="${RUN_DIR}/${CALL_PREFIX}-${PURPOSE}.request.json" python3 -c '
 import json, os, sys
 e = os.environ
-effort_unpinned = (e.get("ST_BACKEND") == "copilot" and
-                   (e.get("ST_EFFORT") or "").lower() != "xhigh")
 raw_iv = (e.get("ST_INDEPENDENCE_VERIFIED") or "unverified").lower()
 iv = True if raw_iv == "true" else False if raw_iv == "false" else "unverified"
 data = {
@@ -331,7 +264,6 @@ data = {
     "backend": e.get("ST_BACKEND") or "codex",
     "model": e["ST_MODEL"],
     "effort": e["ST_EFFORT"],
-    "effort_unpinned": effort_unpinned,
     "fallback_reason": e["ST_FALLBACK"],
     "status": e["ST_STATUS"],
     "reviewer_model": e.get("ST_REVIEWER_MODEL") or None,
@@ -347,11 +279,8 @@ data = {
     "executor_family": e.get("ST_EXECUTOR_FAMILY") or None,
     "reviewer_model_source": e.get("ST_REVIEWER_MODEL_SOURCE") or "unavailable",
     "reviewer_family": e.get("ST_REVIEWER_FAMILY") or None,
-    "reviewer_profile": e.get("ST_REVIEWER_PROFILE") or None,
     "requested_reviewer_model": e.get("ST_REQUESTED_REVIEWER_MODEL") or None,
     "reported_reviewer_model": e.get("ST_REPORTED_REVIEWER_MODEL") or None,
-    "native_evidence_id": e.get("ST_NATIVE_EVIDENCE_ID") or None,
-    "native_evidence_path": e.get("ST_NATIVE_EVIDENCE_PATH") or None,
     "family_relation": e.get("ST_FAMILY_RELATION") or "unknown",
     "independence_verified": iv,
     "memory_hash": e.get("ST_MEMORY_HASH") or None,
@@ -370,19 +299,16 @@ else
   ST_TOOL="$TOOL" ST_BACKEND="$BACKEND" \
   ST_EXECUTOR="${EXECUTOR:-claude-code}" ST_EXECUTOR_MODEL="$EXECUTOR_MODEL" ST_EXECUTOR_FAMILY="$EXECUTOR_FAMILY" \
   ST_EXECUTOR_MODEL_SOURCE="$EXECUTOR_MODEL_SOURCE" ST_REVIEWER_MODEL_SOURCE="$REVIEWER_MODEL_SOURCE" \
-  ST_REVIEWER_FAMILY="$REVIEWER_FAMILY" ST_REVIEWER_PROFILE="$REVIEWER_PROFILE" \
+  ST_REVIEWER_FAMILY="$REVIEWER_FAMILY" \
   ST_REQUESTED_REVIEWER_MODEL="$REQUESTED_REVIEWER_MODEL" ST_REPORTED_REVIEWER_MODEL="$REPORTED_REVIEWER_MODEL" \
   ST_FAMILY_RELATION="$FAMILY_RELATION" ST_INDEPENDENCE_VERIFIED="$INDEPENDENCE_VERIFIED" \
-  ST_MEMORY_HASH="$MEMORY_HASH" ST_NATIVE_EVIDENCE_ID="$NATIVE_EVIDENCE_ID" \
-  ST_NATIVE_EVIDENCE_PATH="$NATIVE_EVIDENCE_PATH" \
+  ST_MEMORY_HASH="$MEMORY_HASH" \
   ST_REVIEWER_MODEL="$EFFECTIVE_REVIEWER_MODEL" ST_REVIEW_INDEPENDENCE="$REVIEW_INDEPENDENCE" \
   ST_ACCEPTANCE_STATUS="$ACCEPTANCE_STATUS" ST_REVIEW_COMPLETED="$REVIEW_COMPLETED" \
   ST_REVIEW_SCOPE_COMPLETE="$REVIEW_SCOPE_COMPLETE" ST_REVIEW_POSITIVE="$REVIEW_POSITIVE" ST_VERDICT="$VERDICT" \
   ST_OUT="${RUN_DIR}/${CALL_PREFIX}-${PURPOSE}.request.json" python3 -c '
 import json, os
 e = os.environ
-effort_unpinned = (e.get("ST_BACKEND") == "copilot" and
-                   (e.get("ST_EFFORT") or "").lower() != "xhigh")
 raw_iv = (e.get("ST_INDEPENDENCE_VERIFIED") or "unverified").lower()
 iv = True if raw_iv == "true" else False if raw_iv == "false" else "unverified"
 data = {
@@ -393,7 +319,6 @@ data = {
     "backend": e.get("ST_BACKEND") or "codex",
     "model": e["ST_MODEL"],
     "effort": e["ST_EFFORT"],
-    "effort_unpinned": effort_unpinned,
     "fallback_reason": e["ST_FALLBACK"],
     "status": e["ST_STATUS"],
     "reviewer_model": e.get("ST_REVIEWER_MODEL") or None,
@@ -411,11 +336,8 @@ data = {
     "executor_family": e.get("ST_EXECUTOR_FAMILY") or None,
     "reviewer_model_source": e.get("ST_REVIEWER_MODEL_SOURCE") or "unavailable",
     "reviewer_family": e.get("ST_REVIEWER_FAMILY") or None,
-    "reviewer_profile": e.get("ST_REVIEWER_PROFILE") or None,
     "requested_reviewer_model": e.get("ST_REQUESTED_REVIEWER_MODEL") or None,
     "reported_reviewer_model": e.get("ST_REPORTED_REVIEWER_MODEL") or None,
-    "native_evidence_id": e.get("ST_NATIVE_EVIDENCE_ID") or None,
-    "native_evidence_path": e.get("ST_NATIVE_EVIDENCE_PATH") or None,
     "family_relation": e.get("ST_FAMILY_RELATION") or "unknown",
     "independence_verified": iv,
     "memory_hash": e.get("ST_MEMORY_HASH") or None,
@@ -430,19 +352,16 @@ ST_THREAD="$THREAD_ID" ST_MODEL="$MODEL" ST_EFFORT="$EFFORT" \
 ST_FALLBACK="$FALLBACK_REASON" ST_STATUS="$STATUS" \
 ST_BACKEND="$BACKEND" ST_EXECUTOR="${EXECUTOR:-claude-code}" ST_EXECUTOR_MODEL="$EXECUTOR_MODEL" ST_EXECUTOR_FAMILY="$EXECUTOR_FAMILY" \
 ST_EXECUTOR_MODEL_SOURCE="$EXECUTOR_MODEL_SOURCE" ST_REVIEWER_MODEL_SOURCE="$REVIEWER_MODEL_SOURCE" \
-ST_REVIEWER_FAMILY="$REVIEWER_FAMILY" ST_REVIEWER_PROFILE="$REVIEWER_PROFILE" \
+ST_REVIEWER_FAMILY="$REVIEWER_FAMILY" \
 ST_REQUESTED_REVIEWER_MODEL="$REQUESTED_REVIEWER_MODEL" ST_REPORTED_REVIEWER_MODEL="$REPORTED_REVIEWER_MODEL" \
 ST_FAMILY_RELATION="$FAMILY_RELATION" ST_INDEPENDENCE_VERIFIED="$INDEPENDENCE_VERIFIED" \
-ST_MEMORY_HASH="$MEMORY_HASH" ST_NATIVE_EVIDENCE_ID="$NATIVE_EVIDENCE_ID" \
-ST_NATIVE_EVIDENCE_PATH="$NATIVE_EVIDENCE_PATH" \
+ST_MEMORY_HASH="$MEMORY_HASH" \
 ST_REVIEWER_MODEL="$EFFECTIVE_REVIEWER_MODEL" ST_REVIEW_INDEPENDENCE="$REVIEW_INDEPENDENCE" \
 ST_ACCEPTANCE_STATUS="$ACCEPTANCE_STATUS" ST_REVIEW_COMPLETED="$REVIEW_COMPLETED" \
 ST_REVIEW_SCOPE_COMPLETE="$REVIEW_SCOPE_COMPLETE" ST_REVIEW_POSITIVE="$REVIEW_POSITIVE" ST_VERDICT="$VERDICT" \
 ST_OUT="${RUN_DIR}/${CALL_PREFIX}-${PURPOSE}.meta.json" python3 -c '
 import json, os
 e = os.environ
-effort_unpinned = (e.get("ST_BACKEND") == "copilot" and
-                   (e.get("ST_EFFORT") or "").lower() != "xhigh")
 raw_iv = (e.get("ST_INDEPENDENCE_VERIFIED") or "unverified").lower()
 iv = True if raw_iv == "true" else False if raw_iv == "false" else "unverified"
 data = {
@@ -453,7 +372,6 @@ data = {
     "model": e["ST_MODEL"],
     "model_family": e.get("ST_REVIEWER_FAMILY") or None,
     "effort": e["ST_EFFORT"],
-    "effort_unpinned": effort_unpinned,
     "fallback_reason": e["ST_FALLBACK"],
     "status": e["ST_STATUS"],
     "reviewer_model": e.get("ST_REVIEWER_MODEL") or None,
@@ -470,11 +388,8 @@ data = {
     "reviewer_model_source": e.get("ST_REVIEWER_MODEL_SOURCE") or "unavailable",
     "requested_reviewer_model": e.get("ST_REQUESTED_REVIEWER_MODEL") or None,
     "reported_reviewer_model": e.get("ST_REPORTED_REVIEWER_MODEL") or None,
-    "native_evidence_id": e.get("ST_NATIVE_EVIDENCE_ID") or None,
-    "native_evidence_path": e.get("ST_NATIVE_EVIDENCE_PATH") or None,
     "family_relation": e.get("ST_FAMILY_RELATION") or "unknown",
     "independence_verified": iv,
-    "reviewer_profile": e.get("ST_REVIEWER_PROFILE") or None,
     "memory_hash": e.get("ST_MEMORY_HASH") or None,
 }
 json.dump(data, open(e["ST_OUT"], "w"), indent=2)
@@ -490,13 +405,10 @@ if [[ -d ".aris/meta" ]]; then
   ST_EXECUTOR="${EXECUTOR:-claude-code}" ST_EXECUTOR_MODEL="$EXECUTOR_MODEL" ST_EXECUTOR_FAMILY="$EXECUTOR_FAMILY" \
   ST_EXECUTOR_MODEL_SOURCE="$EXECUTOR_MODEL_SOURCE" ST_REVIEWER_MODEL_SOURCE="$REVIEWER_MODEL_SOURCE" \
   ST_REVIEWER_FAMILY="$REVIEWER_FAMILY" ST_FAMILY_RELATION="$FAMILY_RELATION" \
-  ST_MEMORY_HASH="$MEMORY_HASH" ST_NATIVE_EVIDENCE_ID="$NATIVE_EVIDENCE_ID" \
-  ST_NATIVE_EVIDENCE_PATH="$NATIVE_EVIDENCE_PATH" \
+  ST_MEMORY_HASH="$MEMORY_HASH" \
   ST_INDEPENDENCE_VERIFIED="$INDEPENDENCE_VERIFIED" python3 -c '
 import json, os
 e = os.environ
-effort_unpinned = (e.get("ST_BACKEND") == "copilot" and
-                   (e.get("ST_EFFORT") or "").lower() != "xhigh")
 raw_iv = (e.get("ST_INDEPENDENCE_VERIFIED") or "unverified").lower()
 iv = True if raw_iv == "true" else False if raw_iv == "false" else "unverified"
 evt = {
@@ -513,10 +425,7 @@ evt = {
     "executor_family": e.get("ST_EXECUTOR_FAMILY") or None,
     "reviewer_model_source": e.get("ST_REVIEWER_MODEL_SOURCE") or "unavailable",
     "reviewer_family": e.get("ST_REVIEWER_FAMILY") or None,
-    "native_evidence_id": e.get("ST_NATIVE_EVIDENCE_ID") or None,
-    "native_evidence_path": e.get("ST_NATIVE_EVIDENCE_PATH") or None,
     "family_relation": e.get("ST_FAMILY_RELATION") or "unknown",
-    "effort_unpinned": effort_unpinned,
     "independence_verified": iv,
     "memory_hash": e.get("ST_MEMORY_HASH") or None,
     "status": e["ST_STATUS"],

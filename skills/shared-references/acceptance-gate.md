@@ -170,14 +170,10 @@ writes.
 | `/experiment-bridge` auto-debug | "did it run / did it converge" (exit 0, no NaN, training started) | A | exit codes, log parse | ✅ safe same-model |
 | `/run-experiment`, `/experiment-queue` retry | job finished / OOM-retry exhausted / N jobs done | A | scheduler + exit codes | ✅ safe same-model |
 | `/auto-review-loop` | score >= 6 AND verdict "ready", per round | B | **codex** assigns score & verdict | ✅ already cross-model |
-| `/auto-paper-improvement-loop` | "review satisfied" (2 rounds) | B | **codex (GPT xhigh)** review | ✅ already cross-model |
 | `/result-to-claim` | `claim_supported ∈ {yes,partial,no}` + `integrity_status` | B | **codex** judges results vs claims | ✅ cross-model |
 | `/kill-argument` | rejection memo → defense, residual issues | B | two fresh **codex** threads | ✅ cross-model |
 | `/proof-checker` | each gap closed, per round | B | **codex** re-reviews each round | ✅ cross-model |
 | `/experiment-audit` | integrity verdict (fake GT, normalization fraud) | B | **codex** audits the eval code | ✅ cross-model |
-| `/paper-claim-audit` | every number matches result files | B | fresh zero-context **cross-model** reviewer | ✅ cross-model |
-| `/citation-audit` | every entry real & in-context | B | fresh **cross-model** reviewer | ✅ cross-model |
-| `/paper-writing` Phase 6 (submission) | `verify_paper_audits.sh` exit 0 | A (gate) **wrapping** B (the audits) | external verifier reads cross-model JSON | ✅ A-gate over B-verdicts |
 
 > 📌 The `/auto-review-loop` row reflects the skill's stop logic: `score >= 6`
 > AND verdict contains "ready"/"almost", evaluated each round. (Its `Constants`

@@ -18,20 +18,17 @@
 set -u
 
 # Patterns that indicate hardcoded helper invocation (no resolver).
-INVOCATION_PY='python3 tools/(verify_papers|extract_paper_style|paper_illustration_image2|figure_renderer|arxiv_fetch|semantic_scholar_fetch|deepxiv_fetch|exa_search|keenable_search|firecrawl_search|openalex_fetch|research_wiki|iteration_log)\.py'
-INVOCATION_SH='bash tools/(verify_paper_audits|save_trace|verify_wiki_coverage|overleaf_audit)\.sh'
+INVOCATION_PY='python3 tools/(verify_papers|arxiv_fetch|semantic_scholar_fetch|deepxiv_fetch|exa_search|keenable_search|firecrawl_search|openalex_fetch|research_wiki|iteration_log)\.py'
+INVOCATION_SH='bash tools/(save_trace|verify_wiki_coverage)\.sh'
 
 # Files exempted from the lint:
 #   - integration-contract.md (canonical docs include ❌ anti-pattern examples)
 #   - wiki-helper-resolution.md (defines the chain; layer-2 reference is intentional)
-#   - skills-codex/paper-writing/SKILL.md L525 hook JSON example (placeholder for user
-#     ~/.claude/settings.json or ~/.codex/config hook, not a SKILL bash block)
 EXEMPTIONS="\
 skills/shared-references/integration-contract.md
 skills/skills-codex/shared-references/integration-contract.md
 skills/shared-references/wiki-helper-resolution.md
-skills/skills-codex/shared-references/wiki-helper-resolution.md
-skills/skills-codex/paper-writing/SKILL.md"
+skills/skills-codex/shared-references/wiki-helper-resolution.md"
 
 is_exempt() {
   case "$EXEMPTIONS" in

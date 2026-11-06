@@ -32,13 +32,12 @@ STATE_DIR = (
     .expanduser()
     .resolve()
 )
-BACKENDS = {"antigravity", "grok", "claude-code"}
+BACKENDS = {"antigravity", "claude-code"}
 EFFORTS = {
     "antigravity": {"low", "medium", "high", "xhigh", "max"},
-    "grok": {"low", "medium", "high", "xhigh"},
     "claude-code": {"low", "medium", "high", "max"},
 }
-DEFAULT_EFFORT = {"antigravity": "high", "grok": "xhigh", "claude-code": "high"}
+DEFAULT_EFFORT = {"antigravity": "high", "claude-code": "high"}
 _stdout_lock = threading.Lock()
 _helpers: dict[str, Any] = {}
 
@@ -109,7 +108,7 @@ def normalize_options(args: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("unsupported worker arguments")
     backend, model = args.get("backend"), args.get("model")
     if not isinstance(backend, str) or backend not in BACKENDS:
-        raise ValueError("backend must be antigravity, grok or claude-code")
+        raise ValueError("backend must be antigravity or claude-code")
     if not isinstance(model, str) or not model.strip():
         raise ValueError("model must be a nonempty string")
     effort = args.get("effort", DEFAULT_EFFORT[backend])
@@ -212,7 +211,7 @@ def build_argv(
             "--model",
             opts["model"],
             "--agent",
-            "aris-model-worker",
+            os.environ.get("AGY_AGENT", "aris-model-worker"),
             "--sandbox",
             "--mode",
             "accept-edits",
@@ -225,38 +224,6 @@ def build_argv(
         if thread_id:
             argv += ["--conversation", thread_id]
         effort_flag = "--effort"
-    elif backend == "grok":
-        argv = [
-            os.environ.get("GROK_BIN", "grok"),
-            "--prompt-file",
-            str(prompt_path),
-            "--output-format",
-            "streaming-messages-json",
-            "--resume" if thread_id else "--session-id",
-            thread_id or str(uuid.uuid4()),
-            "--model",
-            opts["model"],
-            "--cwd",
-            opts["cwd"],
-            "--sandbox",
-            "workspace",
-            "--tools",
-            "read_file,grep,list_dir,write,search_replace",
-            "--permission-mode",
-            "dontAsk",
-            "--no-plan",
-            "--no-subagents",
-            "--disable-web-search",
-            "--allow",
-            "Read",
-            "--allow",
-            "Grep",
-            "--allow",
-            "Edit(./**)",
-            "--deny",
-            "MCPTool",
-        ]
-        effort_flag = "--reasoning-effort"
     else:
         argv = [
             os.environ.get("CLAUDE_BIN", "claude"),
@@ -311,7 +278,7 @@ def execute(
                 argv,
                 cwd=opts["cwd"],
                 env=env,
-                stdin=stream if opts["backend"] != "grok" else subprocess.DEVNULL,
+                stdin=stream,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 start_new_session=(os.name == "posix"),
@@ -505,12 +472,6 @@ def parse_outcome(backend: str, raw: str, log_path: Path, cwd: str) -> dict[str,
             ).selected_variant(log_path)
             if outcome["effort"]:
                 outcome["effortSource"] = "cli_selected_model_variant"
-        elif outcome["threadId"]:
-            outcome["effort"] = helper("grok-exec").runtime_effort(
-                outcome["threadId"], cwd
-            )
-            if outcome["effort"]:
-                outcome["effortSource"] = "native_session_summary"
         if failed or not completed:
             outcome["error"] = (
                 backend + " CLI did not complete a successful terminal result"

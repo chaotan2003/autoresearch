@@ -157,7 +157,7 @@ So:
 
 **If `should_review` is true**, fire a fresh `spawn_agent` call (NEVER `send_input`; pin `model: gpt-6-astra` + `reasoning_effort: xhigh` per `../shared-references/reviewer-routing.md`) with the prompt below. The reviewer reads the source MD + generated HTML directly; it does **not** see this skill's intermediate state.
 
-**Scope of review (narrow on purpose).** The HTML reviewer audits **render fidelity / safety / structure only** — not claim truthfulness. Claim audit belongs upstream (`/paper-claim-audit`, `/research-review`, `/result-to-claim`). Specifically the reviewer checks:
+**Scope of review (narrow on purpose).** The HTML reviewer audits **render fidelity / safety / structure only** — not claim truthfulness. Claim audit belongs upstream (`/research-review`, `/result-to-claim`). Specifically the reviewer checks:
 
 1. **Information fidelity** — every section, claim, table, code block, list, math snippet, sidecar payload is present in the HTML (no silent drop)
 2. **Structural integrity** — heading hierarchy / nested lists / table cells / code fences / `<details>` blocks / math delimiters survive parsing
@@ -284,9 +284,7 @@ Verdict rules:
 - `/idea-discovery` completes → also writes `idea-stage/IDEA_REPORT.html` (academic)
 - `/auto-review-loop` terminates → also writes `review-stage/AUTO_REVIEW.html` (academic, with `--state`)
 - `/kill-argument` already writes `.md + .json` → naturally extends to `+ .html`
-- `/research-pipeline` final report links to the HTML files above (doesn't re-render)
 - `/research-wiki render` subcommand generates `research-wiki/index.html` dashboard
-- `/paper-writing` **does not** auto-emit HTML (the final reader artifact is PDF)
 
 Phase 2 will be guarded by a `— html: true` flag in each affected skill, defaulting to `false` until we have empirical evidence the HTML views are read.
 
@@ -303,14 +301,14 @@ The default templates are derived from the user's own academic-newspaper tutoria
 
 ## External alternatives (for richer surfaces)
 
-For deck / poster / Xiaohongshu card / tweet card / data report style outputs, point users to **[html-anything](https://github.com/nexu-io/html-anything)** (Apache-2.0, 3000⭐ at time of writing). It ships 75 SKILL.md templates across 9 surfaces and detects 8 coding-agent CLIs (including Claude Code, Codex, Copilot). ARIS does *not* depend on it — `/render-html` covers ARIS-native artifacts; html-anything is the recommended path for richer publishing surfaces.
+For deck / poster / Xiaohongshu card / tweet card / data report style outputs, point users to **[html-anything](https://github.com/nexu-io/html-anything)** (Apache-2.0, 3000⭐ at time of writing). It ships 75 SKILL.md templates across 9 surfaces and detects 8 coding-agent CLIs (including Claude Code, Codex). ARIS does *not* depend on it — `/render-html` covers ARIS-native artifacts; html-anything is the recommended path for richer publishing surfaces.
 
 ## Key rules
 
 - **Do not auto-render every Markdown file.** Only artifacts on the whitelist above. File proliferation is the main anti-pattern.
 - **Do not hand-edit the generated HTML.** Edit the source, then re-render. The embedded SHA256 in the HTML meta tells you if the source has changed since render.
 - **academic-template HTML is a reviewed artifact**, not raw output. Base Codex review is fresh but same-family provisional; never call it cross-model acceptance. `--no-review` exists for fast iteration but should not be the way you ship.
-- **The reviewer audits rendering, not research.** Claim truthfulness is owned upstream by `/paper-claim-audit`, `/result-to-claim`, `/research-review`. The HTML reviewer asks: "did the renderer faithfully + safely convert this source?" — nothing more.
+- **The reviewer audits rendering, not research.** Claim truthfulness is owned upstream by `/result-to-claim`, `/research-review`. The HTML reviewer asks: "did the renderer faithfully + safely convert this source?" — nothing more.
 - **CDN dependency is opt-out, not opt-in.** Most users have internet; `--offline` is for air-gapped runs / archival.
 - **The default style is academic-newspaper, not marketing-flashy.** Match the existing ARIS tonal voice. If you want decks/posters/social cards, point users to html-anything.
 - **Pure stdlib only.** Adding a `pip install` dependency to `render_html.py` requires an explicit decision — the helper currently has none. MCP calls live in the skill orchestrator, never in the helper script.

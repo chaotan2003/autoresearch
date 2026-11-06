@@ -32,8 +32,16 @@ def test_retired_checker_is_not_shipped() -> None:
 
 
 def test_existing_paper_workflows_keep_the_original_proof_checker() -> None:
-    for name in ("paper-writing", "auto-paper-improvement-loop", "resubmit-pipeline"):
-        text = read(MAIN / name / "SKILL.md")
+    # The retired paper-submission orchestrator used to be checked here; the
+    # surviving paper-workflow consumer is render-html, and proof-orchestrator
+    # explicitly promises that existing paper workflows keep `/proof-checker`.
+    consumers = (
+        MAIN / "render-html" / "SKILL.md",
+        MAIN / "proof-orchestrator" / "SKILL.md",
+        CODEX / "proof-orchestrator" / "SKILL.md",
+    )
+    for path in consumers:
+        text = read(path)
         assert "/proof-checker" in text
         assert REMOVED_CHECKER not in text
 

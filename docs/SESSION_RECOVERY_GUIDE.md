@@ -1,6 +1,5 @@
 # Session Recovery & State Persistence Guide
 
-[中文版](SESSION_RECOVERY_GUIDE_CN.md) | English
 
 > How to maintain project state across sessions and context compaction in ARIS workflows — the core design is **Pipeline Status in your project CLAUDE.md**, with optional Claude Code hooks for automation.
 
@@ -83,7 +82,7 @@ After Workflow 1 (`/idea-discovery`), `idea-stage/IDEA_REPORT.md` contains 8-12 
 3. Project notes or log files, if you maintain any (restore debugging context, decision rationale)
 4. If `active_tasks`/`training_status` is non-empty → check remote sessions, rebuild monitoring
 
-This works on **any platform** (Claude Code, Cursor, Trae, Codex CLI, OpenClaw) — it's just a Markdown convention.
+This works on **any platform** (Claude Code, Codex CLI, Antigravity) — it's just a Markdown convention.
 
 ### Recommended CLAUDE.md Rules
 
@@ -155,7 +154,7 @@ command. The detailed prepare/continue workflow lives in HERO's skill.
 
 The Pipeline Status convention works without any tooling — the LLM just needs to follow the rules in CLAUDE.md. But in practice, LLMs sometimes forget, especially after compaction. Claude Code [hooks](https://docs.anthropic.com/en/docs/claude-code/hooks) can automate the recovery.
 
-> **These hooks are Claude Code-specific.** If you use Cursor, Trae, or other platforms, skip this section — the Pipeline Status convention above is all you need.
+> **These hooks are Claude Code-specific.** If you use a non-Claude-Code host, skip this section — the Pipeline Status convention above is all you need.
 >
 > **They are copy-paste snippets, not shipped automation** — `install_aris.sh` does not create or register them; you set them up manually with the steps below. `session-restore.sh` alone covers ~80% of the value if you only want one.
 
@@ -255,7 +254,7 @@ case "$STAGE" in
   training)
     OUTPUT="$OUTPUT\n\n[session-restore] Stage: training. Check experiments, then /auto-review-loop if results are ready." ;;
   paper)
-    OUTPUT="$OUTPUT\n\n[session-restore] Stage: paper. Resume with /paper-writing or /paper-write." ;;
+    OUTPUT="$OUTPUT\n\n[session-restore] Stage: paper/review. Resume with /auto-review-loop." ;;
 esac
 
 [ -n "$OUTPUT" ] && echo -e "$OUTPUT"
@@ -463,10 +462,7 @@ The Pipeline Status convention works everywhere. Only the automation layer diffe
 | Platform | How to automate recovery |
 |----------|------------------------|
 | **Claude Code** | Hooks (this guide) |
-| **Cursor** | `.cursor/rules/session-recovery.mdc` — rule that triggers on `CLAUDE.md` and instructs agent to read Pipeline Status first |
-| **Trae** | `.trae/rules/` — add session recovery instructions |
 | **Codex CLI** | Put state-reading instructions and a pointer to the recovery entrypoint in `AGENTS.md` |
-| **OpenClaw** | Include recovery steps in initial agent prompt |
 
 The key insight: **Pipeline Status is the protocol. Hooks are one implementation. The protocol works without the hooks — the hooks just make it reliable.**
 

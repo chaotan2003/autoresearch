@@ -102,7 +102,7 @@ WIKI_SCRIPT=".aris/tools/research_wiki.py"
   echo "ERROR: research_wiki.py not found at .aris/tools/, tools/, \$ARIS_REPO/tools/, or via ~/.aris/repo." >&2
   echo "       Fix one of:" >&2
   echo "         1. rerun 'bash tools/install_aris.sh' from the ARIS repo (creates .aris/tools symlink, refreshes ~/.aris/repo)" >&2
-  echo "         2. rerun 'bash tools/smart_update.sh' (refreshes ~/.aris/repo)" >&2
+  echo "         2. rerun 'bash tools/install_aris.sh' (refreshes ~/.aris/repo)" >&2
   echo "         3. export ARIS_REPO=<path-to-ARIS-repo>" >&2
   echo "         4. cp <ARIS-repo>/tools/research_wiki.py tools/" >&2
   exit 1

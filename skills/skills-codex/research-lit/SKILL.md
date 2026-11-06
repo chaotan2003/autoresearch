@@ -69,7 +69,7 @@ Examples:
 | 5 | **Semantic Scholar API** | `semantic-scholar` | `$S2_FETCHER` resolves (canonical name `semantic_scholar_fetch.py`, per integration-contract §2 Codex chain) | Published venue papers (IEEE, ACM, Springer) with structured metadata: citation counts, venue info, TLDR. **Only runs when explicitly requested** |
 | 6 | **DeepXiv CLI** | `deepxiv` | `$DEEPXIV_FETCHER` resolves (canonical name `deepxiv_fetch.py`, per integration-contract §2) **and** `deepxiv` CLI present | Progressive paper retrieval: search, brief, head, section, trending, web search. **Only runs when explicitly requested** |
 | 7 | **Exa Search** | `exa` | `$EXA_FETCHER` resolves (canonical name `exa_search.py`, per integration-contract §2); fetcher handles `exa-py` SDK + API key internally | AI-powered broad web search with content extraction (highlights, text, summaries). Covers blogs, docs, news, companies, and research papers beyond arXiv/S2. **Only runs when explicitly requested** |
-| 8 | **Gemini** (MCP / CLI) | `gemini` | `mcp__gemini-cli__ask-gemini` is available, or `gemini` CLI is installed | AI-powered broad literature discovery that decomposes topics into sub-problems, aliases, and variants. **Only runs when explicitly requested** |
+| 8 | **Gemini via agy** | `gemini` | `agy` CLI is installed, plus the `aris-scout` agent profile (`agy agent` lists it) | AI-powered broad literature discovery that decomposes topics into sub-problems, aliases, and variants, and opens pages to confirm identifiers. Runs through the `agy` CLI; the `gemini` CLI is never invoked. **Only runs when explicitly requested** |
 | 9 | **OpenAlex** | `openalex` | `$OPENALEX_FETCHER` resolves (canonical name `openalex_fetch.py`, per integration-contract §2 Codex chain) and Python `requests` is importable | Open citation graph with institutional affiliations, funding data, and broad work metadata. **Only runs when explicitly requested** |
 
 > If the user explicitly requests Zotero or Obsidian and that source is not configured, stop and tell the user how to enable it. Only sources that were not requested may be skipped silently.
@@ -111,7 +111,7 @@ Try calling a Zotero MCP tool (e.g., search). If it succeeds:
 1. **Search by topic**: Use the Zotero search tool to find papers matching the research topic
 2. **Read collections**: Check if the user has a relevant collection/folder for this topic
 3. **Extract annotations**: For highly relevant papers, pull PDF highlights and notes — these represent what the user found important
-4. **Export BibTeX**: Get citation data for relevant papers (useful for `/paper-write` later)
+4. **Export BibTeX**: Get citation data for relevant papers (useful for later citation work)
 5. **Compile results**: For each relevant Zotero entry, extract:
    - Title, authors, year, venue
    - User's annotations/highlights (if any)
@@ -318,12 +318,16 @@ If `exa_search.py` or the `exa-py` SDK is unavailable, skip this source graceful
 
 **Gemini search** (only when `gemini` is in sources):
 
-When the user explicitly requests `— sources: gemini` (or includes `gemini` in a combined source list), use Gemini for AI-powered broad literature discovery.
+When the user explicitly requests `— sources: gemini` (or includes `gemini` in a combined source list), use the **agy** CLI for AI-powered broad literature discovery. `agy` (Antigravity) drives the Gemini model and its own built-in web tools; never invoke the `gemini` CLI.
 
-**Priority 1 — Gemini MCP** (preferred): Call `mcp__gemini-cli__ask-gemini` with the search prompt:
+**Priority 1 — agy over MCP** (preferred): call `mcp__model-scout__worker` with the scout prompt below. It starts an `agy` session under the `aris-scout` agent profile, which owns the `search_web` and `read_url_content` tools.
 
 ```
-mcp__gemini-cli__ask-gemini({
+mcp__model-scout__worker({
+  backend: 'antigravity',
+  model: 'gemini-3.8-flash-high',
+  effort: 'high',
+  cwd: '<project root>',
   prompt: 'You are a research literature scout. Search comprehensively for papers on: "QUERY"
 
 IMPORTANT CONSTRAINTS:
@@ -342,12 +346,19 @@ For EACH paper found, provide ALL of the following:
 - Code URL: [GitHub/GitLab link if available, or "No code"]
 - Summary: [one-sentence core contribution]
 
-Find at least 15 papers.',
-  model: 'auto-gemini-3'
+Find at least 15 papers. Write the full list to research/paper_search_raw.md.'
 })
 ```
 
-**Priority 2 — Gemini CLI fallback** (if MCP unavailable): Use `gemini -p "...same prompt..." 2>/dev/null` via Bash (timeout: 120s).
+**Priority 2 — agy CLI fallback** (if the MCP server is unavailable): run the same prompt through the CLI:
+
+```bash
+agy -p "<same prompt>" --agent aris-scout --mode accept-edits \
+  --disable-slash-commands --dangerously-skip-permissions --output-format text 2>/dev/null
+```
+
+- **Timeout**: 300 seconds — real page reads are much slower than a chat completion.
+- **Stderr**: pipe to `/dev/null`; `agy` logs progress there.
 
 If both MCP and CLI are unavailable, skip this source gracefully and continue with the remaining requested sources.
 

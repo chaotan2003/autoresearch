@@ -1,8 +1,8 @@
 # ARIS Agent Guide
 
-> **For AI agents reading this repo cold.** If you are a human, see [README.md](README.md) or [docs/ARIS_INTRO.html](https://wanshuiyin.github.io/Auto-claude-code-research-in-sleep/ARIS_INTRO.html).
+> **For AI agents reading this repo cold.** If you are a human, see [README.md](README.md) or [docs/ARIS_INTRO.md](docs/ARIS_INTRO.md).
 
-ARIS is a research harness: composable Markdown skills that orchestrate the ML research lifecycle through cross-model adversarial collaboration. Executor (Claude / Codex / Cursor / Antigravity / Copilot CLI) writes code & papers; reviewer (GPT-6-Astra via Codex MCP, Claude / Gemini via `claude-review` / `gemini-review` MCP, or Copilot's evidence-gated native complementary reviewer for `/auto-review-loop`) critiques independently.
+ARIS is a research harness: composable Markdown skills that orchestrate the ML research lifecycle through cross-model adversarial collaboration. Executor (Claude / Codex / Antigravity) writes code & papers; reviewer (GPT-6-Astra via Codex MCP, Claude / Gemini via `claude-review` / `gemini-review` MCP, ) critiques independently.
 
 > **Source of Truth.** This file is a *routing index*, not a specification.
 > Behavior of a skill lives in `skills/<name>/SKILL.md`. System-wide
@@ -13,7 +13,7 @@ ARIS is a research harness: composable Markdown skills that orchestrate the ML r
 
 | Platform | Skill root | Notes |
 |----------|-----------|-------|
-| Claude Code / Cursor / Trae / Antigravity / Copilot CLI | `skills/<name>/SKILL.md` | Mainline skills; native `SKILL.md` invocation |
+| Claude Code / Antigravity | `skills/<name>/SKILL.md` | Mainline skills; native `SKILL.md` invocation |
 | Codex CLI | `skills/skills-codex/<name>/SKILL.md` | Codex mirror; uses `spawn_agent` instead of `mcp__codex__codex` |
 | Codex + Claude-review | `skills/skills-codex-claude-review/` | Frozen legacy overlay; use full Codex pack + reviewer selection |
 | Codex + Gemini-review | `skills/skills-codex-gemini-review/` | Frozen legacy overlay; existing links retained |
@@ -27,7 +27,7 @@ acceptance requires actual identities, completed scope, and the applicable gate.
 The two partial overlays are frozen; [migration](skills/skills-codex/README.md#migrate-frozen-partial-overlays)
 preserves existing links and customizations.
 
-**Full catalog**: [`docs/SKILLS_CATALOG.md`](docs/SKILLS_CATALOG.md) — **87 skills**, grouped by role.
+**Full catalog**: [`docs/SKILLS_CATALOG.md`](docs/SKILLS_CATALOG.md) — **48 skills**, grouped by role.
 
 Use [`/lean-formalize`](skills/lean-formalize/SKILL.md) when the user requests Lean work or a substantial mathematical obligation benefits from formal verification. It preserves the original statement, connects the proof, and checks the final declaration and its axioms; ordinary mathematical drafting continues to use `/proof-writer`.
 
@@ -113,10 +113,10 @@ Controls whether mandatory audits gate the final report. `lite` / `balanced` def
 — human checkpoint: true | false             # pause for approval (default: false)
 — AUTO_PROCEED: true | false                 # auto-continue at gates (default: true)
 — difficulty: medium | hard | nightmare      # reviewer adversarial level
-— venue: ICLR | NeurIPS | ICML | ...         # target venue (no silent default; /research-pipeline binds it at the paper stage)
+— venue: ICLR | NeurIPS | ICML | ...         # target venue (no silent default; bound at the paper stage)
 — sources: web, zotero, deepxiv, exa, ...    # literature sources
 — gpu: local | remote | vast | modal         # GPU backend
-— reviewer: auto | codex | oracle-pro | manual # reviewer routing; auto is native only for Copilot /auto-review-loop
+— reviewer: auto | codex | oracle-pro | manual # reviewer routing; auto resolves to codex by default
 ```
 
 ### Scoped flags (skill-specific)
@@ -124,8 +124,6 @@ Controls whether mandatory audits gate the final report. `lite` / `balanced` def
 | Flag | Skill | Effect |
 |------|-------|--------|
 | `--- style-ref <source>` | writer-side skills | Mimic exemplar's structural style WITHOUT copying claims / terms |
-| `--- edit-whitelist <path>` | `/auto-paper-improvement-loop` | YAML schema gating which paths / operations the loop may touch |
-| `--- soft-only` | `/citation-audit` | Bib frozen — rewrites body instead of editing `.bib` |
 | `--review` / `--no-review` | `/render-html` | Toggle cross-model review gate (default: academic=on, dashboard=off) |
 | `--author "..."` | `/render-html` | Optional byline rendered between subtitle and meta |
 | `--deep-fix` / `--restatement-check` | `/proof-checker` | Patch-grade fix plans / cross-location theorem drift |
@@ -135,8 +133,7 @@ Parameters pass through workflow chains automatically.
 ## Workflow Index
 
 ```
-Main chain:      /research-pipeline = W1 → W1.5 → W2 → W3
-Post-paper:      W4 (rebuttal), W5 (resubmit to new venue), W6 (talk)
+Main chain:      W1 → W1.5 → W2
 ```
 
 | ID | Skill | Input | Output | When to invoke |
@@ -144,34 +141,24 @@ Post-paper:      W4 (rebuttal), W5 (resubmit to new venue), W6 (talk)
 | W1 | `/idea-discovery "direction"` | research direction | `IDEA_REPORT.md`, `EXPERIMENT_PLAN.md`, `FINAL_PROPOSAL.md` | Starting new research |
 | W1.5 | `/experiment-bridge` | `EXPERIMENT_PLAN.md` | running code, `EXPERIMENT_LOG.md` | Have a plan, need to implement |
 | W2 | `/auto-review-loop "scope"` | paper + results | improved paper + `REVIEW_STATE.json` | Iterative improvement loop |
-| W3 | `/paper-writing "NARRATIVE_REPORT.md"` | narrative report | `paper/main.pdf` + LaTeX source | Ready to write |
-| W4 | `/rebuttal "paper/ + reviews"` | paper + reviews | `PASTE_READY.txt` + `REBUTTAL_DRAFT_rich.md` | Reviews received |
-| W5 | `/resubmit-pipeline "paper/" --- venue: X` | polished paper + new venue | `<NEW_VENUE_DIR>/` + `RESUBMIT_REPORT.json` | Port to another venue under hard constraints |
-| W6 | `/paper-talk "paper/" --- venue: X` | paper | Beamer + PPTX + speaker notes + Q&A prep | Conference talk after acceptance |
-
-Hard constraints on W5: no new experiments, no bib edits, no framework changes, never overwrites prior submissions. Enforced via `--edit-whitelist` + `RESUBMIT_REPORT.json` 7-state failure-mode ledger.
 
 ## Assurance & Audit Chain
 
-ARIS gates submission via a 5-layer cross-model audit chain. Each layer is invoked by a different skill, all use **fresh codex threads** (never `codex-reply`):
+ARIS gates submission via a 3-layer cross-model audit chain. Each layer is invoked by a different skill, all use **fresh codex threads** (never `codex-reply`):
 
 | Layer | Skill | Asks | Verdict file |
 |:----:|-------|------|--------------|
 | 1 | `/experiment-audit` | "Is the eval code honest? (no fake GT, no self-normalized scores, no phantom results)" | `EXPERIMENT_AUDIT.{md,json}` |
 | 2 | `/result-to-claim` | "Does the claim scientifically follow from the result?" | (writes claim status to Research Wiki) |
-| 3 | `/paper-claim-audit` | "Does the paper *report* the numbers truthfully?" (zero-context reviewer) | `PAPER_CLAIM_AUDIT.{md,json}` |
-| 4 | `/citation-audit` | "Every `\cite{}` valid? Existence + metadata + context-appropriateness?" | `CITATION_AUDIT.{md,json}` |
-| 5 | `/kill-argument` | "Strongest 200-word rejection memo + independent adjudicator scoring each attack point" | `KILL_ARGUMENT.{md,json}` |
+| 3 | `/kill-argument` | "Strongest 200-word rejection memo + independent adjudicator scoring each attack point" | `KILL_ARGUMENT.{md,json}` |
 
-All five emit verdicts on the 6-state schema per [`shared-references/assurance-contract.md`](skills/shared-references/assurance-contract.md): `PASS | WARN | FAIL | BLOCKED | ERROR | NOT_APPLICABLE`.
-
-At `assurance: submission`, Phase 6 of `/paper-writing` runs `tools/verify_paper_audits.sh` and refuses to emit the Final Report if ANY layer is non-green.
+All three emit verdicts on the 6-state schema per [`shared-references/assurance-contract.md`](skills/shared-references/assurance-contract.md): `PASS | WARN | FAIL | BLOCKED | ERROR | NOT_APPLICABLE`.
 
 **Executor must NOT judge its own integrity.** Reviewer reads the artifact cold (file paths only, never summaries or interpretations). Trace each reviewer call to `.aris/traces/<skill>/<date>_run<NN>/` per [`shared-references/review-tracing.md`](skills/shared-references/review-tracing.md).
 
 ## HTML Rendering (for human reading)
 
-[`/render-html`](skills/render-html/SKILL.md) renders selected MD / JSON artifacts (IDEA_REPORT, AUTO_REVIEW, KILL_ARGUMENT, PAPER_PLAN, research-wiki state) into single-file HTML for human reading. **MD / JSON remains canonical**; HTML is a generated view derived from the user's academic-newspaper style.
+[`/render-html`](skills/render-html/SKILL.md) renders selected MD / JSON artifacts (IDEA_REPORT, AUTO_REVIEW, KILL_ARGUMENT, research-wiki state) into single-file HTML for human reading. **MD / JSON remains canonical**; HTML is a generated view derived from the user's academic-newspaper style.
 
 ```
 /render-html <input.md> [--template academic|dashboard]
@@ -179,7 +166,7 @@ At `assurance: submission`, Phase 6 of `/paper-writing` runs `tools/verify_paper
                         [--review | --no-review]
 ```
 
-- `academic` template (linear long-form with sticky TOC): **review by default** — fresh `mcp__codex__codex` thread audits render fidelity / safety / structure (NOT claim truthfulness; that's owned by `/paper-claim-audit` etc.)
+- `academic` template (linear long-form with sticky TOC): **review by default** — fresh `mcp__codex__codex` thread audits render fidelity / safety / structure (NOT claim truthfulness; that's owned by `/result-to-claim` / `/experiment-audit` / `/kill-argument`)
 - `dashboard` template (grid cockpit): no review by default; pass `--review` to force
 - Outputs: `<file>.html` + `<file>.review.json` sidecar + trace at `.aris/traces/render-html/<date>_run<NN>/`
 - Do NOT hand-edit the generated HTML — edit the source, re-render
@@ -194,25 +181,17 @@ Skills communicate through plain-text files in known locations:
 | `refine-logs/FINAL_PROPOSAL.md` | `/research-refine` | `/experiment-plan` |
 | `EXPERIMENT_PLAN.md` | `/experiment-plan` | `/experiment-bridge` |
 | `EXPERIMENT_LOG.md` | `/experiment-bridge` | `/auto-review-loop`, `/result-to-claim` |
-| `NARRATIVE_REPORT.md` | `/auto-review-loop` (or human) | `/paper-writing` |
-| `paper/main.tex` | `/paper-write` | `/paper-compile` |
-| `paper/main.pdf` | `/paper-compile` | `/auto-paper-improvement-loop` |
 | `REVIEW_STATE.json` | `/auto-review-loop` | `/auto-review-loop` (resume after context auto-compact) |
 | `EXPERIMENT_AUDIT.{md,json}` | `/experiment-audit` | `/result-to-claim` |
-| `PAPER_CLAIM_AUDIT.{md,json}` | `/paper-claim-audit` | `/paper-writing` Phase 5.5 gate |
-| `CITATION_AUDIT.{md,json}` | `/citation-audit` | `/paper-writing` Phase 5.8 submission gate |
-| `KILL_ARGUMENT.{md,json}` | `/kill-argument` | `/paper-writing` Phase 5.6 + `/resubmit-pipeline` adversarial gate |
-| `RESUBMIT_REPORT.json` | `/resubmit-pipeline` | submission-gate verifier (7-state ledger) |
-| `GAP_REPORT.md` | `/paper-plan` (when `--- style-ref:` set) | `/paper-write` (emits `<!-- DATA_NEEDED: ... -->` HTML comments for missing slots) |
+| `KILL_ARGUMENT.{md,json}` | `/kill-argument` | `/render-html`, human review |
 | `<artifact>.review.json` | `/render-html` review gate | manual triage |
-| `.aris/edit_whitelist.yaml` | human / `/resubmit-pipeline` | `/auto-paper-improvement-loop --edit-whitelist` |
 | `research-wiki/` | `/research-wiki` | `/idea-creator`, `/research-lit`, `/result-to-claim` |
 | `.aris/meta/events.jsonl` | hooks (passive logging) | `/meta-optimize` |
 | `.aris/traces/<skill>/<date>_run<NN>/` | reviewer-class skills | audit / forensic replay |
 
 ## Helper Resolution (writing new skills)
 
-When a SKILL.md invokes a canonical helper (e.g., `verify_papers.py`, `research_wiki.py`, `save_trace.sh`, `arxiv_fetch.py`, `verify_paper_audits.sh`), **do NOT hardcode** `python3 tools/foo.py`. Resolve via the strict-safe chain documented in [`shared-references/integration-contract.md`](skills/shared-references/integration-contract.md) §2:
+When a SKILL.md invokes a canonical helper (e.g., `verify_papers.py`, `research_wiki.py`, `save_trace.sh`, `arxiv_fetch.py`, `verify_wiki_coverage.sh`), **do NOT hardcode** `python3 tools/foo.py`. Resolve via the strict-safe chain documented in [`shared-references/integration-contract.md`](skills/shared-references/integration-contract.md) §2:
 
 ```
 Layer 0:  ${CLAUDE_SKILL_DIR}/scripts/<helper>     # owner SKILL self-contained (CC 1.0+)
@@ -227,7 +206,7 @@ Advisory CI lint at `.github/workflows/lint-skills-helpers.yml` flags hardcoded 
 
 ## Cross-Model Protocol
 
-- **Executor** (Claude / Codex / Cursor / Antigravity / Copilot): writes code, runs experiments, drafts papers
+- **Executor** (Claude / Codex / Antigravity): writes code, runs experiments, drafts papers
 - **Reviewer** (GPT-6-Astra by host default; or a selected backend in the complete pack): critiques, scores, demands revisions
 - **Rule**: accepted semantic review requires known different actual model families and a completed positive review within scope. Same-family adversarial review can drive revisions and stop a loop provisionally.
 - **Reviewer independence**: pass file paths only, never summaries or interpretations
@@ -235,7 +214,7 @@ Advisory CI lint at `.github/workflows/lint-skills-helpers.yml` flags hardcoded 
 - **Scope limits in every reviewer prompt**: the [`review-scope-limits.md`](skills/shared-references/review-scope-limits.md) block bounds what a reviewer may *propose* (no hashes, no over-defense, no corner-case obsession, not a security product), never what it looks for
 - **Experiment integrity**: executor must NOT judge its own eval code — reviewer audits directly per [`shared-references/experiment-integrity.md`](skills/shared-references/experiment-integrity.md)
 
-The external Codex default is `gpt-6-astra` with two-tier reasoning (deep-audit `ultra` / regular `xhigh`, since 2026-07-10; needs codex-cli ≥ 0.144.1). Capability fallback runs `gpt-6.1-sol`, then `gpt-5.6-sol`, then `gpt-5.5`, all at xhigh; legacy `gpt-5.4` is available as `--- reviewer-model: gpt-5.4`. In a bound Copilot CLI session, `/auto-review-loop` instead defaults to the built-in `rubber-duck` subagent and accepts it only when host events prove the dynamically selected model is from a different family. Oracle Pro tier (`gpt-5.5-pro`) via `--- reviewer: oracle-pro` is a separate routing path.
+The external Codex default is `gpt-6-astra` with two-tier reasoning (deep-audit `ultra` / regular `xhigh`, since 2026-07-10; needs codex-cli ≥ 0.144.1). Capability fallback runs `gpt-6.1-sol`, then `gpt-5.6-sol`, then `gpt-5.5`, all at xhigh; legacy `gpt-5.4` is available as `--- reviewer-model: gpt-5.4`. Oracle Pro tier (`gpt-5.5-pro`) via `--- reviewer: oracle-pro` is a separate routing path.
 
 ## Shared References
 

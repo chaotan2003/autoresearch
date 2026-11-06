@@ -255,7 +255,7 @@ WIKI_SCRIPT=".aris/tools/research_wiki.py"
 [ -f "$WIKI_SCRIPT" ] || WIKI_SCRIPT="tools/research_wiki.py"
 [ -f "$WIKI_SCRIPT" ] || { [ -n "${ARIS_REPO:-}" ] && WIKI_SCRIPT="$ARIS_REPO/tools/research_wiki.py"; }
 [ -f "$WIKI_SCRIPT" ] || {
-  echo "WARN: research_wiki.py not found; verdict will be reported but wiki edges/query-pack/log will be skipped. Fix: bash tools/install_aris.sh or smart_update.sh (refreshes ~/.aris/repo), export ARIS_REPO, or cp <ARIS-repo>/tools/research_wiki.py tools/." >&2
+  echo "WARN: research_wiki.py not found; verdict will be reported but wiki edges/query-pack/log will be skipped. Fix: bash tools/install_aris.sh (refreshes ~/.aris/repo), export ARIS_REPO, or cp <ARIS-repo>/tools/research_wiki.py tools/." >&2
   WIKI_SCRIPT=""
 }
 ```

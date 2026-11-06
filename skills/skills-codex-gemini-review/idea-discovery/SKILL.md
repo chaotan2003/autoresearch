@@ -240,7 +240,6 @@ Finalize `idea-stage/IDEA_REPORT.md` with all accumulated information:
 ## Next Steps
 - [ ] /run-experiment to deploy experiments from the plan
 - [ ] /auto-review-loop to iterate until submission-ready
-- [ ] Or invoke /research-pipeline for the complete end-to-end flow
 ```
 
 ## Output Protocols
@@ -271,5 +270,4 @@ After this pipeline produces a validated top idea:
 /run-experiment                     ← deploy experiments from the plan
 /auto-review-loop "top idea"        ← Workflow 2: iterate until submission-ready
 
-Or use /research-pipeline for the full end-to-end flow.
 ```

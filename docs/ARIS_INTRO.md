@@ -4,9 +4,9 @@
 
 ## TL;DR
 
-ARIS is a collection of **87 composable Claude Code skills** that orchestrate **cross-model collaboration**: Claude Code drives the research (reads files, writes code, deploys experiments) while an external LLM (GPT-6-Astra via [Codex MCP](https://github.com/openai/codex)) acts as a critical reviewer. The two models disagree, debate, and force each other to do better — adversarial, not self-play.
+ARIS is a collection of **48 composable Claude Code skills** that orchestrate **cross-model collaboration**: Claude Code drives the research (reads files, writes code, deploys experiments) while an external LLM (GPT-6-Astra via [Codex MCP](https://github.com/openai/codex)) acts as a critical reviewer. The two models disagree, debate, and force each other to do better — adversarial, not self-play.
 
-Seven workflows (W1 / W1.5 / W2 / W3 / W4 / W5 / W6) compose into a full research lifecycle: idea discovery → experiment bridge → auto-review → paper writing → rebuttal → resubmit → conference talk. Tested end-to-end on real ICLR/NeurIPS submissions. Score progression on a real overnight run: **5/10 → 7.5/10 with 20+ GPU experiments**.
+Three workflows (W1 / W1.5 / W2) compose into a full research lifecycle: idea discovery → experiment bridge → auto-review → submission. Tested end-to-end on real ICLR/NeurIPS submissions. Score progression on a real overnight run: **5/10 → 7.5/10 with 20+ GPU experiments**.
 
 > 💡 **The ARIS bet.** Markdown is for writers. HTML is for readers. Every workflow artifact stays in Markdown (auditable, machine-parseable, future-proof). When a human needs to actually *read* one, [`/render-html`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/render-html/SKILL.md) produces this view — gated by a fresh cross-model Codex review (the same ARIS invariant every other audit-class skill follows).
 
@@ -70,10 +70,6 @@ Every review round uses a **fresh codex thread**. We never use `codex-reply` to 
 | **1** | Idea Discovery | Literature → brainstorm 8-12 → novelty check → pilot 2-3 on GPU → ranked report | [`/idea-discovery`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/idea-discovery/SKILL.md) |
 | **1.5** | Experiment Bridge | Plan → implement → GPT-6-Astra code review → sanity check → deploy → collect | [`/experiment-bridge`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/experiment-bridge/SKILL.md) |
 | **2** | Auto Review Loop | Review → fix → re-run → repeat until score ≥ 6/10 (or `MAX_ROUNDS=4` hit) | [`/auto-review-loop`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/auto-review-loop/SKILL.md) |
-| **3** | Paper Writing | Narrative → outline → figures → LaTeX → PDF → 2 rounds review (4 → 8.5/10) | [`/paper-writing`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/paper-writing/SKILL.md) |
-| **4** | Rebuttal | Parse reviews → strategy → optional experiments → draft → stress test | [`/rebuttal`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/rebuttal/SKILL.md) |
-| **5** | Resubmit | Port paper to a new venue under hard constraints (no new exps, no bib edits) | [`/resubmit-pipeline`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/resubmit-pipeline/SKILL.md) |
-| **6** | Conference Talk | Paper → Beamer + PPTX + speaker notes + assurance audits | [`/paper-talk`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/paper-talk/SKILL.md) |
 
 ### Workflow 1 — Idea Discovery & Method Refinement
 
@@ -153,93 +149,11 @@ The `difficulty: nightmare` flag lets GPT-6-Astra read your repo directly via `c
 
 ---
 
-### Workflow 3 — Paper Writing Pipeline
-
-> **"I have results. Turn them into a submission-ready PDF."**
-
-[`/paper-writing`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/paper-writing/SKILL.md) takes a `NARRATIVE_REPORT.md` (claims, experiments, key figures) and produces compiled LaTeX:
-
-1. 📐 **Plan** — [`/paper-plan`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/paper-plan/SKILL.md) builds a claims-evidence matrix from the narrative, then a section-by-section outline
-2. 📊 **Figures** — [`/paper-figure`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/paper-figure/SKILL.md) auto-generates plots (line / bar / heatmap) and comparison tables from JSON/CSV results. Architecture diagrams via [`/figure-spec`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/figure-spec/SKILL.md) (deterministic JSON → SVG) or Gemini illustration
-3. ✍️ **Write** — [`/paper-write`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/paper-write/SKILL.md) emits per-section LaTeX following the venue's style file. Citations pulled from DBLP / CrossRef (real BibTeX, never LLM-generated)
-4. 🔧 **Compile** — [`/paper-compile`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/paper-compile/SKILL.md) runs `latexmk` until clean, fixes overfull `\hbox`, verifies the page limit via `pdftotext`
-5. ✨ **Polish** — [`/auto-paper-improvement-loop`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/auto-paper-improvement-loop/SKILL.md) runs 2 rounds of GPT-6-Astra content review + 1 round of format check. Real ICLR run: **4/10 → 8.5/10 across 3 rounds**
-
-```bash
-/paper-writing NARRATIVE_REPORT.md --- venue: ICLR --- effort: max
-```
-
-> ✅ **Submission gate**: at `effort: max` / `effort: beast` (or explicit `assurance: submission`), the PDF is only labelled "submission-ready" if [`/proof-checker`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/proof-checker/SKILL.md), [`/paper-claim-audit`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/paper-claim-audit/SKILL.md), and [`/citation-audit`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/citation-audit/SKILL.md) all return green via `tools/verify_paper_audits.sh`.
-
----
-
-### Workflow 4 — Rebuttal
-
-> **"Reviews came back. Help me draft a safe rebuttal."**
-
-[`/rebuttal`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/rebuttal/SKILL.md) is structured around three hard safety gates that block fabrication:
-
-1. 📥 **Parse** reviews — atomize into per-reviewer / per-concern entries; normalize against the venue's format (ICML char limit, NeurIPS per-reviewer threads, etc.)
-2. 🗺️ **Strategy** — global themes + per-reviewer priority + character budget + a list of blocked claims (things the reviewer flagged but the paper can't actually back)
-3. 🧪 **Evidence sprint** (optional) — if `--- auto experiment: true` and the reviewer asked for a missing experiment, hand off to `/experiment-bridge`, wait for results, fold into draft
-4. ✍️ **Draft** — global opener + numbered per-reviewer responses + closing for the meta-reviewer
-5. 🛡️ **Safety check** — 6 lints: coverage (no concern dropped), provenance (every claim cites paper/review/user-confirmed result), commitment (no overpromising), tone, internal consistency, character limit
-6. 🔬 **GPT-6-Astra stress test** — fresh-thread reviewer reads the draft cold, tries to break it
-7. 📤 **Finalize** — two outputs: `PASTE_READY.txt` (exact character count, ready to drop into OpenReview) + `REBUTTAL_DRAFT_rich.md` (extended, for human editing)
-
-```bash
-/rebuttal "paper/ + reviews" --- venue: ICML --- character limit: 5000
-```
-
-> 🔒 **Three safety gates — rebuttal will NOT finalize if any fails**: (a) **provenance** — every claim maps to paper/review/user-confirmed result; (b) **commitment** — every promise is user-approved; (c) **coverage** — every reviewer concern is tracked through to a response.
-
----
-
-### Workflow 5 — Resubmit Pipeline
-
-> **"Move a polished paper from venue A to venue B under hard constraints."**
-
-[`/resubmit-pipeline`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/resubmit-pipeline/SKILL.md) is for the ICML→NeurIPS / workshop→archival transition. Distinct from Workflow 3 (which writes from scratch) — here the paper exists, the goal is targeted edits only:
-
-1. 📁 **Physical isolation** — copy into `<NEW_VENUE_DIR>/`; the original submission directory is *never touched*
-2. 🛡️ **5-layer anonymity check** — author names, affiliations, self-citations, GitHub / Overleaf URLs, in-text "we" patterns that break double-blind
-3. 🔬 **Soft-only audits** — `/proof-checker`, `/paper-claim-audit`, `/citation-audit --soft-only` (the `--soft-only` mode rewrites instead of editing bib, since the bib is frozen)
-4. ✏️ **Microedit** — [`/auto-paper-improvement-loop --edit-whitelist`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/auto-paper-improvement-loop/SKILL.md) with a YAML schema (`allowed_paths` / `forbidden_paths` / `forbidden_operations`)
-5. 🗡 **Adversarial gate** — [`/kill-argument`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/kill-argument/SKILL.md) writes the strongest 200-word rejection memo a senior area chair would write; an independent adjudicator scores each point
-6. 📤 **Compile + push** — `/paper-compile` + optional `/overleaf-sync push`
-
-```bash
-/resubmit-pipeline "paper/" --- venue: NeurIPS
-```
-
-> 🔒 **Hard constraints (cannot be overridden)**: no new experiments, no bib edits, no framework changes, never overwrites prior submissions. Microedit YAML schema enforces these at every diff.
-
----
-
-### Workflow 6 — Conference Talk Pipeline
-
-> **"Paper accepted. Prepare the talk."**
-
-[`/paper-talk`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/paper-talk/SKILL.md) is the post-acceptance sister workflow to `/paper-writing`:
-
-1. 📋 **Outline** — extracted from `paper/` (or `NARRATIVE_REPORT.md` if no compiled paper); one slide-cluster per contribution; section→talk-beat mapping
-2. 🎨 **Generate** — [`/paper-slides`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/paper-slides/SKILL.md) emits Beamer source + PPTX + speaker notes + Q&A prep
-3. 💎 **Polish** — [`/slides-polish`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/slides-polish/SKILL.md) does per-page Codex review against the reference PDF; applies a fix-pattern catalog (PPTX font scaling 1.5-1.8× for projector legibility, banner-as-tcolorbox, em-dash spacing, Chinese EA font hint via PingFang SC, anonymity placeholder discipline)
-4. 🛡️ **Audit** (when `assurance: conference-ready`) — `/paper-claim-audit` + `/citation-audit` run against a synthetic paper directory at `.aris/paper-talk/audit-input/sections/*.tex` to verify slides don't introduce claims the paper can't back
-
-```bash
-/paper-talk "paper/" --- venue: ICLR --- assurance: conference-ready
-```
-
-> 💡 **Assurance ladder** (independent of `effort`): `draft` / `polished` (default) / `conference-ready`. Legal combination: `--- effort: lite --- assurance: conference-ready` = "fast pipeline, every audit must emit a verdict before the final report." Use it when you trust the writing pass but want hard claim/citation gates.
-
----
-
 ### Cross-cutting: Research Wiki & Meta-Optimize
 
 Two skills that aren't bound to any single workflow but make the whole system smarter over time:
 
-- 📚 **[`/research-wiki`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/research-wiki/SKILL.md)** — persistent knowledge base across all seven workflows. Stores every paper read, idea piloted (including failures), experiment run, claim verified. Failed ideas become anti-repetition memory: the next time `/idea-creator` runs, it sees what didn't work and steers around it.
+- 📚 **[`/research-wiki`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/research-wiki/SKILL.md)** — persistent knowledge base across all three workflows. Stores every paper read, idea piloted (including failures), experiment run, claim verified. Failed ideas become anti-repetition memory: the next time `/idea-creator` runs, it sees what didn't work and steers around it.
 
 - 🧬 **[`/meta-optimize`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/meta-optimize/SKILL.md)** — the outer-loop SKILL.md optimizer. Reads accumulated event logs from your past runs (`.aris/meta/events.jsonl`), analyzes patterns (which skills failed often? which parameter overrides were common? where did scores plateau?), and proposes SKILL.md improvements. Reviewer-gated, user-approved.
 
@@ -263,32 +177,29 @@ A real overnight 4-round run on an ML research project, from borderline reject t
 
 ---
 
-## The 87 Skills
+## The 48 Skills
 
 Grouped by role (full catalog: [`docs/SKILLS_CATALOG.md`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/docs/SKILLS_CATALOG.md)).
 
 | Category | Count | Headliners |
 |----------|:----:|-----------|
-| Literature & ideation | 10 | [`/research-lit`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/research-lit/SKILL.md), [`/idea-creator`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/idea-creator/SKILL.md), [`/novelty-check`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/novelty-check/SKILL.md), [`/deepxiv`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/deepxiv/SKILL.md), [`/arxiv`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/arxiv/SKILL.md) |
+| Literature & ideation | 9 | [`/research-lit`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/research-lit/SKILL.md), [`/idea-creator`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/idea-creator/SKILL.md), [`/novelty-check`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/novelty-check/SKILL.md), [`/deepxiv`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/deepxiv/SKILL.md), [`/arxiv`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/arxiv/SKILL.md) |
 | Experiments | 8 | [`/experiment-bridge`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/experiment-bridge/SKILL.md), [`/run-experiment`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/run-experiment/SKILL.md), [`/monitor-experiment`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/monitor-experiment/SKILL.md), [`/experiment-audit`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/experiment-audit/SKILL.md) |
-| Paper writing | 12 | [`/paper-plan`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/paper-plan/SKILL.md), [`/paper-figure`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/paper-figure/SKILL.md), [`/paper-write`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/paper-write/SKILL.md), [`/paper-compile`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/paper-compile/SKILL.md), [`/auto-paper-improvement-loop`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/auto-paper-improvement-loop/SKILL.md) |
-| Audits | 6 | [`/proof-checker`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/proof-checker/SKILL.md), [`/paper-claim-audit`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/paper-claim-audit/SKILL.md), [`/citation-audit`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/citation-audit/SKILL.md), [`/citation-crosscheck`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/citation-crosscheck/SKILL.md), [`/result-to-claim`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/result-to-claim/SKILL.md), [`/kill-argument`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/kill-argument/SKILL.md) |
-| Talks & posters | 5 | [`/paper-talk`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/paper-talk/SKILL.md), [`/paper-slides`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/paper-slides/SKILL.md), [`/paper-poster-html`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/paper-poster-html/SKILL.md), [`/slides-polish`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/slides-polish/SKILL.md) |
-| Wiki & meta | 6 | [`/research-wiki`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/research-wiki/SKILL.md), [`/meta-optimize`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/meta-optimize/SKILL.md), [`/research-pipeline`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/research-pipeline/SKILL.md), [`/research-refine`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/research-refine/SKILL.md) |
+| Audits | 2 | [`/proof-checker`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/proof-checker/SKILL.md), [`/result-to-claim`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/result-to-claim/SKILL.md), [`/kill-argument`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/kill-argument/SKILL.md) |
+| Wiki & meta | 5 | [`/research-wiki`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/research-wiki/SKILL.md), [`/meta-optimize`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/meta-optimize/SKILL.md), [`/research-refine`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/research-refine/SKILL.md) |
 | Proof & theory | 4 | [`/proof-writer`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/proof-writer/SKILL.md), [`/formula-derivation`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/formula-derivation/SKILL.md), [`/proof-orchestrator`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/proof-orchestrator/SKILL.md), [`/lean-formalize`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/lean-formalize/SKILL.md) |
-| Integrations & support | 31 | [`/feishu-notify`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/feishu-notify/SKILL.md), [`/figure-spec`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/figure-spec/SKILL.md), [`/render-html`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/render-html/SKILL.md), [`/overleaf-sync`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/overleaf-sync/SKILL.md) … |
+| Integrations & support | 20 | [`/feishu-notify`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/feishu-notify/SKILL.md), [`/render-html`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/render-html/SKILL.md), [`/gemini-search`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/gemini-search/SKILL.md) … |
 
-### The 3-layer audit chain
+### The 2-layer audit chain
 
-A core ARIS invariant: **the executor must not judge its own integrity**. Three layers of cross-model audit:
+A core ARIS invariant: **the executor must not judge its own integrity**. Two layers of cross-model audit:
 
 | Layer | Skill | Asks | When |
 |:----:|-------|------|------|
 | 1 | [`/experiment-audit`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/experiment-audit/SKILL.md) | "Is the eval code honest? (no fake GT, no self-normalized scores, no phantom results)" | Before / after experiment runs |
 | 2 | [`/result-to-claim`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/result-to-claim/SKILL.md) | "Does the claim scientifically follow from the result?" | After results, before writing |
-| 3 | [`/paper-claim-audit`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/paper-claim-audit/SKILL.md) | "Does the paper *report* the numbers truthfully?" (fresh zero-context reviewer) | Before submission |
 
-Plus [`/citation-audit`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/citation-audit/SKILL.md) (4th layer): every `\cite{...}` validated for existence, metadata, **and** context-appropriateness — the most diagnostic check ("does the cited paper actually establish this claim?"). And [`/kill-argument`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/kill-argument/SKILL.md) (5th layer): two fresh codex gpt-6-astra + ultra threads write the strongest 200-word rejection memo and an independent adjudicator pass before submission.
+Plus [`/kill-argument`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/kill-argument/SKILL.md) (3rd layer): two fresh codex gpt-6-astra + ultra threads write the strongest 200-word rejection memo and an independent adjudicator pass before submission.
 
 ---
 
@@ -298,11 +209,7 @@ ARIS skills are plain `SKILL.md` files. They run anywhere an agent reads markdow
 
 - 🤖 **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** — the default, most tested
 - 🤖 **[Codex CLI](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/tree/main/skills/skills-codex)** — full skill mirror; `spawn_agent` instead of `mcp__codex__codex` (base pack's default reviewer is same-family — install a claude-review/gemini-review overlay for cross-family verdicts)
-- 🖱️ **[Cursor](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/docs/CURSOR_ADAPTATION.md)** — agent mode reads ARIS skills directly
-- 🖥️ **[Trae](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/docs/TRAE_ARIS_RUNBOOK_EN.md)** — ByteDance AI IDE
-- 🚀 **[Antigravity](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/docs/ANTIGRAVITY_ADAPTATION.md)** — Google's agent-first IDE, native SKILL.md
-- 🐙 **[GitHub Copilot CLI](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/docs/COPILOT_CLI_ADAPTATION.md)** — terminal agent, native SKILL.md
-- 🐾 **[OpenClaw](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/docs/OPENCLAW_ADAPTATION.md)** — without Claude Code slash skills
+- 🚀 **[Antigravity](https://antigravity.google/)** — Google's agent-first IDE, native SKILL.md
 
 > 📝 **ARIS is a methodology, not a platform.** Fork it, rewrite it, adapt it to your stack. The only invariants are: cross-family review, fresh threads for reviewers, audit integrity. Everything else — model choice, install path, integration surface — is yours.
 
@@ -310,13 +217,13 @@ ARIS skills are plain `SKILL.md` files. They run anywhere an agent reads markdow
 
 ## 中文版速览
 
-ARIS（**A**utonomous **R**esearch via Adversarial **M**ulti-Agent Collaboration，**梦中科研**）是一组 87 个可组合的 Claude Code skills，编排**跨模型对抗式协作**：
+ARIS（**A**utonomous **R**esearch via Adversarial **M**ulti-Agent Collaboration，**梦中科研**）是一组 48 个可组合的 Claude Code skills，编排**跨模型对抗式协作**：
 
 - **执行**：Claude Code 读文件、写代码、跑实验、改论文
 - **审稿**：GPT-6-Astra（via [Codex MCP](https://github.com/openai/codex)）以**跨家族**审稿人身份打分、找弱点、提建议
 - **关键**：每轮 review 用新 thread；执行者绝不审判自己的实验诚实度
 
-七条工作流（W1 / W1.5 / W2 / W3 / W4 / W5 / W6）端到端贯通：找 idea → 实验桥接 → 自动审稿循环 → 写论文 → 写 rebuttal → 跨 venue 移植 → 会议演讲。在真实 ICLR/NeurIPS 投稿上验证过。
+三条工作流（W1 / W1.5 / W2）端到端贯通：找 idea → 实验桥接 → 自动审稿循环 → 投稿。在真实 ICLR/NeurIPS 投稿上验证过。
 
 > 🆕 **新加入的 skill**：[`/render-html`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/render-html/SKILL.md) —— 把任何 ARIS 产出的 MD（如 `IDEA_REPORT.md`、`AUTO_REVIEW.md`、`KILL_ARGUMENT.md`）渲染成单文件 HTML，适合给人类读。Markdown 仍是 canonical source，HTML 是 generated view，永远嵌入源 SHA256 + 渲染时间戳防 drift。**academic 模板默认走跨模型 Codex review gate**——同样的 ARIS 不变量。
 
@@ -339,7 +246,7 @@ claude mcp add codex -s user -- python3 "$HOME/aris_repo/mcp-servers/codex-exec/
 
 # 4. Use in Claude Code
 claude
-> /research-pipeline "factorized gap in discrete diffusion LMs"
+> /idea-discovery "factorized gap in discrete diffusion LMs"
 ```
 
 > ⚙️ **Alternative model combinations** — no Claude or OpenAI API required. See the [Alt routes](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep#-alternative-model-combinations) (Alt B/E for GLM × MiniMax-M3 or free DeepSeek-V3.1 via ModelScope; nine routes total, including Antigravity-as-executor and Gemini-direct-API-as-reviewer).
@@ -359,7 +266,6 @@ claude
 
 | | |
 |---|---|
-| 💬 Group | [WeChat group QR](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/docs/wechat_group.jpg) (refreshes weekly) |
 | 🌟 Star | [github.com/wanshuiyin/Auto-claude-code-research-in-sleep](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep) |
 | 📖 Technical report | [arXiv 2605.03042](https://huggingface.co/papers/2605.03042) |
 | 📑 Skills catalog | [`docs/SKILLS_CATALOG.md`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/docs/SKILLS_CATALOG.md) |

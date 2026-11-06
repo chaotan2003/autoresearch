@@ -16,7 +16,7 @@ def configure(project, **config):
     (directory / "reviewer.json").write_text(json.dumps(config))
 
 
-@pytest.mark.parametrize("host,transport", [("codex", "native"), ("claude-code", "codex-mcp"), ("copilot", "codex-mcp")])
+@pytest.mark.parametrize("host,transport", [("codex", "native"), ("claude-code", "codex-mcp")])
 @pytest.mark.parametrize("tier,effort", [("deep", "ultra"), ("regular", "xhigh")])
 def test_host_defaults(tmp_path, host, transport, tier, effort):
     route = resolve_route(tmp_path, host, tier)
@@ -51,7 +51,7 @@ def test_switching_provider_does_not_inherit_project_options(tmp_path):
 
 def test_partial_project_config_uses_host_default(tmp_path):
     configure(tmp_path, effort="high")
-    route = resolve_route(tmp_path, "copilot", default_reviewer="grok")
+    route = resolve_route(tmp_path, "claude-code", default_reviewer="grok")
     assert (route["backend"], route["effort"], route["source"]) == ("grok", "high", "project")
 
 
@@ -62,9 +62,9 @@ def test_aliases(tmp_path, alias, backend, tool):
     assert route["fresh_tool"] == tool
 
 
-@pytest.mark.parametrize("backend", ["oracle-pro", "agy", "manual", "copilot", "copilot-native"])
+@pytest.mark.parametrize("backend", ["oracle-pro", "agy", "manual"])
 def test_legacy_routes_retain_identity_and_options(tmp_path, backend):
-    route = resolve_route(tmp_path, "copilot", reviewer=backend, model="legacy-model", effort="low")
+    route = resolve_route(tmp_path, "claude-code", reviewer=backend, model="legacy-model", effort="low")
     assert route["backend"] == backend
     assert route["transport"] == "legacy"
     assert route["model"] == "legacy-model"

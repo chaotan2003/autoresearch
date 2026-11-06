@@ -8,7 +8,6 @@ Covers:
            a different target / as a non-symlink path
   uninstall: removes the managed symlink
   uninstall: preserves non-managed `.aris/tools` (different target / real dir)
-  agent profiles: ownership sidecar removes only links this installer created
   dry-run: prints planned action without writing anything
 """
 import os
@@ -268,68 +267,6 @@ class InstallTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertTrue(link.is_symlink(), "user-created symlink must be preserved")
         self.assertEqual(os.readlink(link), str(elsewhere))
-
-    def test_leaf_and_profile_ownership_manifests_coexist_independently(self):
-        install = self._run()
-        self.assertEqual(install.returncode, 0, msg=install.stdout + install.stderr)
-        leaf_manifest = self.project / ".aris" / "installed-agents.txt"
-        profile_manifest = self.project / ".aris" / "installed-agent-profiles.txt"
-        self.assertTrue(leaf_manifest.is_file())
-        self.assertTrue(profile_manifest.is_file())
-        self.assertIn("version\t1", leaf_manifest.read_text(encoding="utf-8"))
-        profile_entries = profile_manifest.read_text(encoding="utf-8").splitlines()
-        self.assertTrue(profile_entries)
-        self.assertIn("aris-reviewer-openai.agent.md", profile_entries)
-        self.assertTrue(all(line.endswith(".agent.md") for line in profile_entries))
-
-        reconcile = self._run(
-            "--skills",
-            "auto-review-loop",
-            "--exclude",
-            "idea-creator,research-lit,proof-checker",
-        )
-        self.assertEqual(reconcile.returncode, 0, msg=reconcile.stdout + reconcile.stderr)
-        self.assertFalse(leaf_manifest.exists())
-        self.assertTrue(profile_manifest.is_file())
-        profile = self.project / ".github" / "agents" / "aris-reviewer-openai.agent.md"
-        self.assertTrue(profile.is_symlink())
-
-        uninstall = self._run("--uninstall")
-        self.assertEqual(uninstall.returncode, 0, msg=uninstall.stdout + uninstall.stderr)
-        self.assertFalse(profile.exists())
-        self.assertFalse(profile_manifest.exists())
-
-    def test_uninstall_removes_installer_created_agent_profiles(self):
-        self._run()
-        agent = self.project / ".github" / "agents" / "aris-reviewer-openai.agent.md"
-        ownership = self.project / ".aris" / "installed-agent-profiles.txt"
-        self.assertTrue(agent.is_symlink())
-        self.assertIn(agent.name, ownership.read_text().splitlines())
-
-        result = self._run("--uninstall")
-
-        self.assertEqual(result.returncode, 0, msg=result.stderr)
-        self.assertFalse(agent.exists())
-        self.assertFalse(agent.is_symlink())
-
-    def test_uninstall_preserves_identical_preexisting_agent_symlink(self):
-        agents_dir = self.project / ".github" / "agents"
-        agents_dir.mkdir(parents=True)
-        agent = agents_dir / "aris-reviewer-openai.agent.md"
-        expected = REPO_ROOT / ".github" / "agents" / agent.name
-        os.symlink(str(expected), str(agent))
-
-        install = self._run()
-        self.assertEqual(install.returncode, 0, msg=install.stderr)
-        ownership = self.project / ".aris" / "installed-agent-profiles.txt"
-        if ownership.exists():
-            self.assertNotIn(agent.name, ownership.read_text().splitlines())
-
-        uninstall = self._run("--uninstall")
-
-        self.assertEqual(uninstall.returncode, 0, msg=uninstall.stderr)
-        self.assertTrue(agent.is_symlink(), "pre-existing exact link is user-owned")
-        self.assertEqual(os.readlink(agent), str(expected))
 
 
 if __name__ == "__main__":

@@ -18,10 +18,9 @@ Claude Code; `claude mcp list` should show `codex … ✓ Connected`. Verified o
 codex-cli 0.153.4 and 0.154.0; needs a version with `codex exec resume`, so there
 is no reason to keep the old registration on 0.153 either. Skills need no change.
 
-Installed by copying `skills/` without keeping a clone? Clone the repo anywhere
-and point at its `server.py`; the file is self-contained.
+The server is self-contained: point it at this file from any clone location.
 
-Other MCP hosts (Cursor, Trae, Antigravity, Copilot CLI) use the same key with
+Antigravity uses the same key with
 `"command": "python3", "args": ["/absolute/path/to/aris_repo/mcp-servers/codex-exec/server.py"]`.
 
 Requirements: `codex` on PATH and logged in; Python 3.9+ (macOS system python is fine); no packages.

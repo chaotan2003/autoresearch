@@ -4,7 +4,7 @@
 
 ## 当前范围
 
-- 基座覆盖：主线 `skills/` 的 `87` 个 skill 全量同步
+- 基座覆盖：主线 `skills/` 的 `48` 个 skill 全量同步
 - 支持目录：`shared-references/`，与主线 `30/30` 名称完整对齐
 - reviewer-heavy skill 的默认 reviewer 契约：
   - 首轮：`spawn_agent`
@@ -86,38 +86,10 @@ bash ~/aris_repo/tools/install_aris_codex.sh ~/your-project --reconcile --dry-ru
 配置并注册对应桥接。这里没有自动写入全局设置的迁移命令；安装变更后重启 Codex
 以重新加载技能。
 
-## Copy 安装与更新
-
-如果你明确想用 copy 安装，而不是受管 symlink：
-
-```bash
-mkdir -p ~/.codex/skills
-cp -a ~/aris_repo/skills/skills-codex/. ~/.codex/skills/
-```
-
-更新 copy 安装请使用：
-
-```bash
-bash ~/aris_repo/tools/smart_update_codex.sh
-bash ~/aris_repo/tools/smart_update_codex.sh --apply
-```
-
-项目级 copy 安装则使用：
-
-```bash
-bash ~/aris_repo/tools/smart_update_codex.sh --project ~/your-project
-bash ~/aris_repo/tools/smart_update_codex.sh --project ~/your-project --apply
-```
-
-`smart_update_codex.sh` 会拒绝更新由 `install_aris_codex.sh` 管理的 symlink 安装，并提示改用 `install_aris_codex.sh --reconcile`。
-
 ## 不允许降级的 Skill
 
-以下 4 个 skill 不允许静默降级：
+以下 1 个 skill 不允许静默降级：
 
-- `comm-lit-review`
 - `research-lit`
-- `paper-poster-html`
-- `pixel-art`
 
 如果缺少所需能力，必须明确提示用户去配置，不允许自动改成简化路径继续跑。

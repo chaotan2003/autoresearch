@@ -33,7 +33,7 @@ Systematically verify a mathematical proof via fresh-agent adversarial review, f
 - REVIEWER_MODEL = `gpt-6-astra` via Codex reviewer agent, reasoning effort
   `ultra` for this deep-audit skill (capability fallback never below `xhigh`)
 - **REVIEWER_BACKEND = `codex`** — Default: Codex reviewer agent (`spawn_agent`, ultra — deep-audit tier). Override with `— reviewer: oracle-pro` for GPT-5.5 Pro via Oracle MCP. See `shared-references/reviewer-routing.md`.
-- AUDIT_DOC: `PROOF_AUDIT.md` at the paper directory root, alongside `main.tex` (cumulative log; when invoked via `/paper-writing`, this is `paper/PROOF_AUDIT.md`)
+- AUDIT_DOC: `PROOF_AUDIT.md` at the paper directory root, alongside `main.tex` (cumulative log; `paper/PROOF_AUDIT.md` when a paper directory exists)
 - REPORT_TEX: `proof_audit_report.tex` (formal before/after PDF)
 - STATE_FILE: `PROOF_CHECK_STATE.json` (for recovery)
 - SKELETON_DOC: `PROOF_SKELETON.md` (micro-claim inventory)
@@ -517,13 +517,11 @@ python3 "$WIKI_SCRIPT" add_claim research-wiki/ --slug "<stable-theorem-id>" \
 ## Submission Artifact Emission
 
 This skill **always** writes `PROOF_AUDIT.json` at the paper directory
-root (i.e. `paper/PROOF_AUDIT.json` when invoked from `/paper-writing`
-with paper-dir `paper/`; `<your-paper-dir>/PROOF_AUDIT.json` when invoked
-standalone), regardless of caller or whether the paper contains theorems.
+root (i.e. `<paper-dir>/PROOF_AUDIT.json`; `paper/PROOF_AUDIT.json` when the
+paper directory is `paper/`), regardless of caller or whether the paper contains theorems.
 A paper with no `\begin{theorem}` / `\begin{lemma}` / `\begin{proof}` emits
-verdict `NOT_APPLICABLE`; silent skip is forbidden. `paper-writing`
-Phase 6 and `verify_paper_audits.sh` both rely on this artifact
-existing at `<paper-dir>/PROOF_AUDIT.json`.
+verdict `NOT_APPLICABLE`; silent skip is forbidden. Downstream consumers
+read this artifact from `<paper-dir>/PROOF_AUDIT.json`.
 
 The artifact conforms to the schema in `shared-references/assurance-contract.md`:
 
@@ -592,9 +590,8 @@ proof-checker runs. Do not accept prior audit outputs
 thread preserves reviewer independence per
 `shared-references/reviewer-independence.md`.
 
-This skill never blocks by itself; `paper-writing` Phase 6 plus the
-verifier decide whether the verdict blocks finalization based on the
-`assurance` level.
+This skill never blocks by itself; the calling orchestration decides
+whether the verdict blocks finalization based on the `assurance` level.
 
 ## Example Invocations
 

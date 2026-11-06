@@ -107,21 +107,6 @@ User can override independently:
 | research-review | passes | 1 | 1 + follow-up | 1 + 2 follow-ups | 2 independent + cross-compare |
 | experiment-audit | depth | skip | basic 4 checks | full 6 checks | line-by-line + reproduce |
 
-### Writing & Rebuttal
-
-| Skill | Dimension | lite | balanced | max | beast |
-|-------|-----------|------|----------|-----|-------|
-| paper-plan | outline reviews | 0 | 1 | 2 | 3 |
-| paper-plan | citations/section | 2-3 | 4-5 | 5-8 | 8+ |
-| paper-figure | caption reviews | 1 | 1 | 2 | 3 |
-| paper-write | abstract variants | 1 | 1 | 2 | 3 |
-| paper-write | related work depth | shallow | standard | deep | exhaustive |
-| paper-compile | fix attempts | 2 | 3 | 4 | until zero warnings |
-| auto-paper-improvement | rounds | 1 | 2 | 3 | 5 |
-| paper-illustration | render iterations | 2 | 3 | 5 | 7 |
-| rebuttal | draft rounds | 1 | 2 | 3 | 5 |
-| rebuttal | stress tests | 0-1 | 1 | 2 | 3 |
-
 ## How to Read Effort in a Skill
 
 Add this to the Constants section of each skill:

@@ -73,9 +73,9 @@ cd ~/your-paper-project
 bash ~/aris_repo/tools/install_aris.sh
 
 # 只装需要的 skill（选择性安装）：
-bash ~/aris_repo/tools/install_aris.sh --list-groups                  # 查看 10 个功能分组
-bash ~/aris_repo/tools/install_aris.sh --groups paper-core,lit-search # 按组安装
-bash ~/aris_repo/tools/install_aris.sh --skills paper-writing         # 按 skill 安装（依赖自动带上）
+bash ~/aris_repo/tools/install_aris.sh --list-groups                  # 查看 6 个功能分组
+bash ~/aris_repo/tools/install_aris.sh --groups ideation,experiments  # 按组安装
+bash ~/aris_repo/tools/install_aris.sh --skills idea-discovery        # 按 skill 安装（依赖自动带上）
 # 全新安装时不带任何选择参数（且在终端里跑）会进入全屏勾选菜单（空格勾选，组行整组切换）
 
 # 其他常用：
@@ -130,8 +130,7 @@ bash ~/aris_repo/tools/install_aris.sh
 | `codex` | Claude Code | 默认配置（Claude + GPT 审稿） | `claude mcp add codex -s user -- python3 "$HOME/aris_repo/mcp-servers/codex-exec/server.py"`（Step 3.1 已完成） |
 | `claude-review` | Codex CLI | 使用 Codex 作为执行者、Claude 作为审稿人 | `codex mcp add claude-review -- python3 ~/.codex/mcp-servers/claude-review/server.py`（详见 `mcp-servers/claude-review/README.md`） |
 | `gemini-review` | Codex CLI | 使用 Codex 作为执行者、Gemini 作为审稿人 | `codex mcp add gemini-review --env GEMINI_REVIEW_BACKEND=api -- python3 ~/.codex/mcp-servers/gemini-review/server.py`（详见 `mcp-servers/gemini-review/README.md`） |
-| `llm-chat` | Claude Code | 使用任意 OpenAI 兼容 API 作为审稿人 | `claude mcp add llm-chat -s user -- python3 /path/to/aris_repo/mcp-servers/llm-chat/server.py`（详见 `docs/LLM_API_MIX_MATCH_GUIDE.md`） |
-| `minimax-chat` | Claude Code | 使用 MiniMax 作为审稿人（无需 OpenAI Key） | 详见 `docs/MINIMAX_MCP_GUIDE.md` |
+| `llm-chat` | Claude Code | 使用任意 OpenAI 兼容 API 作为审稿人 | `claude mcp add llm-chat -s user -- python3 /path/to/aris_repo/mcp-servers/llm-chat/server.py`（详见 [`mcp-servers/llm-chat/README.md`](mcp-servers/llm-chat/README.md)） |
 | `manual-review` | Claude Code | 人工手动审稿 | `claude mcp add manual-review -s user -- python3 /path/to/aris_repo/mcp-servers/manual-review/server.py` |
 | `feishu-bridge` | —（独立 HTTP 服务） | 飞书通知集成 | 详见 `mcp-servers/feishu-bridge/` |
 | `codex-image2` | Claude Code | 增强的 Codex 图片生成 | 详见 `mcp-servers/codex-image2/` |
@@ -270,10 +269,5 @@ codex mcp list           # Codex CLI MCP 服务（如适用）
 claude
 > /idea-discovery "你的研究方向"              # 工作流 1 — 方向要具体！不要 "NLP"，要 "离散扩散语言模型的 factorized gap"
 > /experiment-bridge                         # 工作流 1.5 — 有计划了？实现 + 部署 + 收结果
-> /auto-review-loop "你的论文主题或范围"         # 工作流 2：审稿 → 修复 → 再审，一夜完成
-> /paper-writing "NARRATIVE_REPORT.md"       # 工作流 3：研究叙事 → 精修 PDF
-> /rebuttal "paper/ + reviews" — venue: ICML  # 工作流 4：解析 review → 起草 rebuttal → follow-up
-> /resubmit-pipeline "paper/" — venue: NeurIPS  # 工作流 5：移植到新 venue（纯文本，不跑新实验）
-> /paper-talk "paper/" — venue: ICLR            # 工作流 6：论文 → Beamer + PPTX + 讲稿 + 评审审计
-> /research-pipeline "你的研究方向"            # 全流程：W1 → 1.5 → 2 → handoff；默认到 NARRATIVE_REPORT.md 停。加 `— auto_write: true, venue: ICLR` 才连 W3 写论文
+> /auto-review-loop "你的结果或范围"            # 工作流 2：审稿 → 修复 → 再审，直到通过
 ```

@@ -24,8 +24,6 @@ FIXTURES = [
     "skills/research-review/SKILL.md",
     "skills/result-to-claim/SKILL.md",
     "skills/kill-argument/SKILL.md",
-    "skills/interview-cheatsheet/SKILL.md",
-    "skills/patent-review/SKILL.md",
     "skills/render-html/SKILL.md",
     "skills/auto-review-loop/SKILL.md",
 ]

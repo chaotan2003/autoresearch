@@ -52,15 +52,15 @@ autonomous, stop being silent.**
 | The ask | Route |
 |---|---|
 | "implement X" / "build me something that does X" / "prototype then extend" | **this skill** |
-| "find me a research direction and take it to a paper" | `/research-pipeline` |
+| "find me a research direction and take it to a paper" | `/idea-discovery` → `/experiment-bridge` |
 | "I have `EXPERIMENT_PLAN.md` — run the campaign" | `/experiment-bridge` |
 | "sweep these parameters" | `/dse-loop` |
 | "launch what is already written" | `/run-experiment` |
 | "do these results support the claim?" | `/result-to-claim` |
 
-`/research-pipeline` decides *what to research*; this skill decides **nothing**
+`/idea-discovery` decides *what to research*; this skill decides **nothing**
 of consequence without writing it down, and builds what the author already chose.
-They compose: a pipeline run may delegate its build stage here and inherit the
+They compose: an idea run may delegate its build stage here and inherit the
 ledger.
 
 ## Constants

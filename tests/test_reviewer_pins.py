@@ -27,7 +27,7 @@ EFFORT_RE = re.compile(r"(?:model_)?reasoning_effort[\"'`]?:\s*[\"'`]?([a-z]+)")
 # Generated/derived packs are validated by their own generators, and the
 # llm-chat pack intentionally strips Codex pins.
 EXCLUDED_DIRS = ("skills-codex-claude-review", "skills-codex-gemini-review",
-                 "auto-review-loop-llm", "auto-review-loop-minimax")
+                 "auto-review-loop-llm")
 
 
 def _fenced_blocks(text):

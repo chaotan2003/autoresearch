@@ -779,8 +779,6 @@ When a skill needs ARIS helper scripts, resolve the repo root from the manifest 
 \`$repo_lookup_cmd\`
 Do not edit or delete symlinked skills in place; update upstream or rerun:
 \`bash $ARIS_REPO/tools/install_aris_codex.sh \"$PROJECT_PATH\" --reconcile\`
-For copied Codex installs, use:
-\`bash $ARIS_REPO/tools/smart_update_codex.sh --project \"$PROJECT_PATH\"\`
 
 ### Goal Pulse for Codex Goals
 When the user starts or resumes a Goal, or you take over an active Goal, read and enable HERO Goal Pulse for the current thread by default, without another confirmation:

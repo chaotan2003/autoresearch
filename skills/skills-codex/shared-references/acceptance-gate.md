@@ -193,14 +193,10 @@ writes.
 | `/experiment-bridge` auto-debug | "did it run / did it converge" (exit 0, no NaN, training started) | A | exit codes, log parse | ✅ safe same-model |
 | `/run-experiment`, `/experiment-queue` retry | job finished / OOM-retry exhausted / N jobs done | A | scheduler + exit codes | ✅ safe same-model |
 | `/auto-review-loop` | score >= 6 AND verdict "ready", per round | B | fresh **Codex** score & verdict | ⚠ provisional in base |
-| `/auto-paper-improvement-loop` | "review satisfied" (2 rounds) | B | fresh **Codex** review | ⚠ provisional in base |
 | `/result-to-claim` | `claim_supported ∈ {yes,partial,no}` + `integrity_status` | B | fresh **Codex** result judgment | ⚠ provisional in base |
 | `/kill-argument` | rejection memo → defense, residual issues | B | two fresh **Codex** threads | ⚠ provisional in base |
 | `/proof-checker` | each gap closed, per round | B | fresh **Codex** re-review | ⚠ provisional in base |
 | `/experiment-audit` | integrity verdict (fake GT, normalization fraud) | B | fresh **Codex** audit | ⚠ provisional in base |
-| `/paper-claim-audit` | every number matches result files | B | fresh **Codex** reviewer | ⚠ provisional in base |
-| `/citation-audit` | every entry real & in-context | B | fresh **Codex** reviewer | ⚠ provisional in base |
-| `/paper-writing` Phase 6 (submission) | `verify_paper_audits.sh` exit 0 | A (gate) wrapping B (the audits) | verifier aggregates provenance JSON | ✅ accepted only with complete accepted audit coverage; no mechanical substitute for semantic audits |
 
 > 📌 The `/auto-review-loop` row reflects the skill's stop logic: `score >= 6`
 > AND verdict contains "ready"/"almost", evaluated each round. (Its `Constants`

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Resumable run-state for ARIS multi-phase workflows.
 
-A long ARIS workflow (research-pipeline, paper-writing, idea-discovery) can fail
+A long ARIS workflow (idea-discovery, experiment-bridge, auto-review-loop) can fail
 mid-run, and today there is no record of *which phase* already finished — a
 resume restarts from scratch. This helper models a run as an ordered list of
 phases with status, so resume can pick up where it left off.
@@ -16,8 +16,8 @@ the phase status enum SPLITS execution from acceptance —
     provisional a fresh SAME-FAMILY reviewer returned a positive verdict. This
               is terminal for resume so a Codex-only workflow can advance, but
               remains explicitly distinct from accepted.
-    skipped   the phase does not apply to this run (e.g. paper-writing when
-              AUTO_WRITE=false) — a deterministic config decision, terminal.
+    skipped   the phase does not apply to this run (e.g. a phase gated off by
+              a config flag) — a deterministic config decision, terminal.
 
 Resume resolves FORWARD to the first phase that is NOT terminal ({accepted,
 provisional, skipped}) — never the first non-`done`. So a phase the executor self-considered
@@ -231,7 +231,7 @@ def accept(root: str, run_id: str, phase: str, verdict_id: str, reviewer: str, f
     (unless force) that the phase already be `done`.
 
     Call ONLY from a cross-model reviewer verdict (codex/gemini) or a deterministic
-    verifier (verify_papers.py, verify_paper_audits.sh, a passing test, exit 0).
+    verifier (verify_papers.py, a passing test, exit 0).
     The executor (Claude) must never call this on its own self-report.
 
     `verdict_id` should be a durable handle: the reviewer thread/trace id, or the

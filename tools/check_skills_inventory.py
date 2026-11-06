@@ -16,7 +16,6 @@ README = REPO_ROOT / "README.md"
 README_CN = REPO_ROOT / "README_CN.md"
 AGENT_GUIDE = REPO_ROOT / "AGENT_GUIDE.md"
 ARIS_INTRO = REPO_ROOT / "docs" / "ARIS_INTRO.md"
-ARIS_INTRO_HTML = REPO_ROOT / "docs" / "ARIS_INTRO.html"
 CODEX_README = CODEX_ROOT / "README.md"
 CODEX_README_CN = CODEX_ROOT / "README_CN.md"
 BOM = b"\xef\xbb\xbf"
@@ -163,7 +162,6 @@ def check_inventory() -> list[str]:
     readme_cn = read(README_CN)
     agent_guide = read(AGENT_GUIDE)
     aris_intro = read(ARIS_INTRO)
-    aris_intro_html = read(ARIS_INTRO_HTML)
     codex_readme = read(CODEX_README)
     codex_readme_cn = read(CODEX_README_CN)
 
@@ -178,9 +176,6 @@ def check_inventory() -> list[str]:
         (ARIS_INTRO, aris_intro, r"collection of \*\*(?P<count>\d+) composable Claude Code skills\*\*"),
         (ARIS_INTRO, aris_intro, r"## The (?P<count>\d+) Skills"),
         (ARIS_INTRO, aris_intro, r"一组 (?P<count>\d+) 个可组合的 Claude Code skills"),
-        (ARIS_INTRO_HTML, aris_intro_html, r"collection of <strong>(?P<count>\d+) composable Claude Code skills</strong>"),
-        (ARIS_INTRO_HTML, aris_intro_html, r'id="the-(?P<count>\d+)-skills"'),
-        (ARIS_INTRO_HTML, aris_intro_html, r"一组 (?P<count>\d+) 个可组合的 Claude Code skills"),
         (CODEX_README, codex_readme, r"all `(?P<count>\d+)` mainline skills"),
         (CODEX_README_CN, codex_readme_cn, r"`(?P<count>\d+)`[^\n]*skill"),
     ]
@@ -241,18 +236,16 @@ def check_inventory() -> list[str]:
     # both thresholds) and actually wired into a heartbeat consumer — else it is dead code.
     # Same dead-code guard as the Agent-grant⇒cite rule above.
     extc = read(SKILLS_ROOT / "shared-references" / "external-cadence.md")
-    rp = read(SKILLS_ROOT / "research-pipeline" / "SKILL.md")
+    idea = read(SKILLS_ROOT / "idea-discovery" / "SKILL.md")
     tool_stall = (REPO_ROOT / "tools" / "iteration_log.py").is_file()
     doc_ladder = bool(re.search(r"forced structural pivot", extc, re.IGNORECASE)) and \
         bool(re.search(r"stale_count`?\s*>=\s*2", extc)) and bool(re.search(r"stale_count`?\s*>=\s*4", extc))
-    # Prove the wiring is real (not a prose mention): resolver chain + note invocation +
-    # both pivot branches handled in research-pipeline.
-    wired = ('iteration_log.py' in rp and 'ITER_LOG' in rp
-             and re.search(r'"\$ITER_LOG"\s+note', rp) is not None
-             and 'pivot' in rp and 'structural' in rp and 'human' in rp)
+    # iteration_log.py has one documented consumer left (/idea-discovery Phase 2 writes each
+    # chosen frame with `--direction`); without that write-back the helper is dead code.
+    wired = 'iteration_log.py' in idea and '--direction' in idea
     require(tool_stall, "tools/iteration_log.py (stall→pivot, B) must exist", failures)
     require(doc_ladder, "external-cadence.md must document the stall ladder with both thresholds (>=2 structural, >=4 human) (B)", failures)
-    require(wired, "research-pipeline/SKILL.md must actually wire iteration_log.py (resolver + `$ITER_LOG note` + pivot handling) — not just mention it (B)", failures)
+    require(wired, "idea-discovery/SKILL.md must document the iteration_log direction-diversity write-back (else the helper is an orphan writer) (B)", failures)
 
     # research_wiki.py add_claim (claim layer) ⇔ its documented birth trigger in
     # /proof-checker. add_claim is a writer; without a skill that calls it, the claim

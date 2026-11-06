@@ -30,11 +30,6 @@ def test_mainline_large_payload_skills_prefer_path_only_codex_prompts() -> None:
             "refine-logs/codex_round_N_review_bundle.md",
             "Read the re-evaluation bundle at <absolute path",
         ],
-        "grant-proposal": [
-            "grant-proposal/codex_panel_review_bundle_round_1.md",
-            "Read the grant review bundle at <absolute path",
-            "grant-proposal/codex_panel_review_bundle_round_N.md",
-        ],
         "novelty-check": [
             "NOVELTY_DOSSIER.md",
             "Read the novelty dossier at <absolute path",
@@ -60,9 +55,6 @@ def test_mainline_large_payload_skills_remove_inline_paste_placeholders() -> Non
         "research-refine": [
             "[Paste the FULL proposal from Phase 1]",
             "[Paste the FULL revised proposal]",
-        ],
-        "grant-proposal": [
-            "[PASTE FULL PROPOSAL TEXT]",
         ],
     }
 

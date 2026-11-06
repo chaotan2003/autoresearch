@@ -35,7 +35,7 @@ def has_send_input_block(text: str) -> bool:
 def test_codex_skill_set_matches_mainline() -> None:
     main_names = skill_names(MAIN_SKILLS)
     codex_names = skill_names(CODEX_SKILLS)
-    assert len(main_names) == 87
+    assert len(main_names) == 48
     assert main_names == codex_names
 
 
@@ -185,8 +185,8 @@ def test_codex_review_assurance_is_explicit_and_honest() -> None:
     assert not offenders, "Codex base mirror falsely claims cross-family review:\n" + "\n".join(offenders)
 
     provisional_skills = {
-        "auto-review-loop", "research-review", "paper-writing", "render-html",
-        "proof-checker", "paper-claim-audit", "citation-audit", "kill-argument",
+        "auto-review-loop", "research-review", "render-html",
+        "proof-checker", "kill-argument",
         "experiment-audit", "result-to-claim", "meta-apply",
     }
     for skill in provisional_skills:
@@ -258,29 +258,17 @@ def test_codex_auto_review_has_one_receipt_append_phase() -> None:
 
 def test_overlay_boundaries_are_exact() -> None:
     expected_claude = {
-        "auto-paper-improvement-loop",
         "auto-review-loop",
         "novelty-check",
-        "paper-figure",
-        "paper-plan",
-        "paper-write",
         "research-refine",
         "research-review",
     }
     expected_gemini = {
-        "auto-paper-improvement-loop",
         "auto-review-loop",
-        "grant-proposal",
         "idea-creator",
         "idea-discovery",
         "idea-discovery-robot",
         "novelty-check",
-        "paper-figure",
-        "paper-plan",
-        "paper-poster-html",
-        "paper-slides",
-        "paper-write",
-        "paper-writing",
         "research-refine",
         "research-review",
     }
@@ -290,23 +278,30 @@ def test_overlay_boundaries_are_exact() -> None:
 
 def test_non_degrading_skill_rules_are_documented() -> None:
     checks = {
-        "comm-lit-review": "Do not silently downgrade",
         "research-lit": "stop and ask the user to configure",
-        "paper-poster-html": "Do not silently degrade",
-        "pixel-art": "Do not silently downgrade",
     }
     for name, needle in checks.items():
         text = read(CODEX_SKILLS / name / "SKILL.md")
         assert needle in text
 
 
-def test_codex_gemini_search_uses_auto_gemini_3_model() -> None:
+def test_codex_gemini_search_routes_through_agy() -> None:
     text = read(CODEX_SKILLS / "gemini-search" / "SKILL.md")
 
-    assert "DEFAULT_MODEL = auto-gemini-3" in text
-    assert "model: 'auto-gemini-3'" in text
+    assert "DEFAULT_MODEL = gemini-3.8-flash-high" in text
+    assert "model: 'gemini-3.8-flash-high'" in text
+    assert "mcp__model-scout__worker" in text
+    assert "--agent aris-scout" in text
+    # The gemini CLI is not used anywhere: agy drives the Gemini model instead.
+    assert "mcp__gemini-cli" not in text
+    assert "gemini -p" not in text
     assert "DEFAULT_MODEL = gemini-3-pro-preview" not in text
     assert "model: 'DEFAULT_MODEL'" not in text
+
+    mainline = read(CODEX_SKILLS.parent / "gemini-search" / "SKILL.md")
+    assert "mcp__gemini-cli" not in mainline
+    assert "gemini -p" not in mainline
+    assert "--agent aris-scout" in mainline
 
 
 def test_codex_skill_helper_commands_use_installed_aris_repo() -> None:
@@ -327,7 +322,6 @@ def test_codex_skill_helper_commands_use_installed_aris_repo() -> None:
         "arxiv",
         "deepxiv",
         "exa-search",
-        "figure-spec",
         "research-lit",
         "research-wiki",
         "semantic-scholar",
@@ -372,17 +366,7 @@ def test_codex_high_risk_skills_preserve_claude_semantics() -> None:
             "Phase B.6",
             "Debate Transcript",
         ],
-        "research-pipeline": [
-            "REVIEWER_DIFFICULTY",
-            "Reviewer Memory",
-            "Debate Protocol",
-            "nightmare",
-            "Review Tracing",
-            "AUTO_WRITE",
-            "NARRATIVE_REPORT.md",
-            "experiment-queue",
-            "Stage 6: Paper Writing",
-        ],
+        
         "experiment-bridge": [
             "Vast.ai",
             "Modal",
@@ -417,10 +401,6 @@ def test_codex_high_risk_skills_preserve_claude_semantics() -> None:
             "integration-contract.md",
             ".aris/installed-skills-codex.txt",
         ],
-        "rebuttal": [
-            "Review Tracing",
-            "oracle-pro",
-        ],
     }
 
     failures: list[str] = []
@@ -446,30 +426,9 @@ def test_codex_medium_risk_skills_preserve_claude_semantics() -> None:
             "RESEARCH_BRIEF.md",
             "Research Brief",
         ],
-        "paper-writing": [
-            "Architecture & Illustration Generation",
-            "Submission pre-flight checklist",
-            "Invoking the four audits",
-            "Running the verifier",
-            "Optional hardening",
-            "assurance-contract.md",
-        ],
         "deepxiv": [
             "Semantic Scholar",
             "integration-contract.md",
-        ],
-        "comm-lit-review": [
-            "Source Selection",
-            "Retrieval Order",
-            "Graceful degradation rules",
-            "IEEE Xplore",
-            "ScienceDirect",
-            "ACM Digital Library",
-        ],
-        "mermaid-diagram": [
-            "Score Breakdown Guide",
-            "CRITICAL - any failure = score <= 6",
-            "any failure = score <= 7",
         ],
     }
 
@@ -518,20 +477,16 @@ def test_codex_training_check_defaults_to_interactive_watch() -> None:
 
 
 def test_codex_skill_instructions_use_codex_paths() -> None:
-    auto_paper = read(CODEX_SKILLS / "auto-paper-improvement-loop" / "SKILL.md")
-    paper_writing = read(CODEX_SKILLS / "paper-writing" / "SKILL.md")
-    figure_spec = read(CODEX_SKILLS / "figure-spec" / "SKILL.md")
+    auto_review = read(CODEX_SKILLS / "auto-review-loop" / "SKILL.md")
+    render_html = read(CODEX_SKILLS / "render-html" / "SKILL.md")
     meta_optimize = read(CODEX_SKILLS / "meta-optimize" / "SKILL.md")
 
-    assert "~/.codex/feishu.json" in auto_paper
-    assert "~/.claude/feishu.json" not in auto_paper
-    assert ".aris/installed-skills-codex.txt" in paper_writing
-    assert ".agents/skills/paper-writing" in paper_writing
-    assert "~/.claude/skills/paper-writing/SKILL.md" not in paper_writing
-    assert "~/.claude/settings.json" not in paper_writing
-    assert 'python3 "$FIGURE_RENDERER"' in figure_spec
-    assert '[ -n "$FIGURE_RENDERER" ] ||' in figure_spec
-    assert "figure_renderer.py not found" in figure_spec
+    assert "~/.codex/feishu.json" in auto_review
+    assert "~/.claude/feishu.json" not in auto_review
+    assert ".aris/installed-skills-codex.txt" in render_html
+    assert ".agents/skills/render-html" in render_html
+    assert "~/.claude/skills/render-html/SKILL.md" not in render_html
+    assert "~/.claude/settings.json" not in render_html
     assert "Codex-compatible event logger" in meta_optimize
     assert ".claude/settings.json" not in meta_optimize
     assert "templates/claude-hooks/meta_logging.json" not in meta_optimize

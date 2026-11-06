@@ -28,7 +28,7 @@ Stress-test the headline claims of a paper against the strongest possible reject
 
 ## Why This Exists
 
-Standard score-based reviews (`/research-review`, `/auto-paper-improvement-loop`) tend to produce **balanced** weakness lists.  Each weakness gets ~equal attention, ranked CRITICAL > MAJOR > MINOR.  Empirically, this misses one specific failure mode: the **single most damaging argument** a reviewer would write in a rejection paragraph — the one sentence that, if a senior area chair reads it, kills the paper.
+Standard score-based reviews (`/research-review`) tend to produce **balanced** weakness lists.  Each weakness gets ~equal attention, ranked CRITICAL > MAJOR > MINOR.  Empirically, this misses one specific failure mode: the **single most damaging argument** a reviewer would write in a rejection paragraph — the one sentence that, if a senior area chair reads it, kills the paper.
 
 A balanced reviewer might list "scope-overclaim risk" as MAJOR alongside 3-5 other MAJORs, never quite committing.  An adversarial reviewer **must commit**: their entire job is to convince the area chair to reject in 200 words.
 
@@ -43,15 +43,13 @@ This skill runs that adversarial pass deliberately, then forces a second fresh r
 | Standard peer review | "Score this paper, list weaknesses by severity" | balanced weakness list |
 | `/research-review` | "Deep technical review of methods + claims" | structured deep critique |
 | `/proof-checker` | "Is this theorem actually proved?" | per-step proof obligation audit |
-| `/paper-claim-audit` | "Does the paper report numbers truthfully?" | per-claim evidence verification |
-| `/citation-audit` | "Are citations real and used in correct context?" | per-entry KEEP/FIX/REPLACE/REMOVE |
 | **`/kill-argument`** | **"Write the single strongest rejection paragraph; then defend it."** | **attack memo + per-point defense + unresolved surfaced** |
 
 This skill is **complementary**, not a replacement.  Run after standard reviews when you want to know what the worst-case reviewer paragraph would look like, before camera-ready or rebuttal preparation.
 
 ## When To Use
 
-- After 1-2 rounds of `/auto-paper-improvement-loop` settled at a stable score, but before submission.  Surfaces what additional fixes would close the headline-attack gap.
+- After 1-2 rounds of review settled at a stable score, but before submission.  Surfaces what additional fixes would close the headline-attack gap.
 - During rebuttal preparation, to predict reviewer-2's strongest objection so you can prepare the response in advance.
 - For theory papers with a high-level title that may oversimplify the actual theorem (the most common reject-attack pattern).
 - For papers where a reviewer might attack scope, assumption-vs-claim mismatch, missing proof obligations, or evidence-vs-headline gaps.
@@ -274,7 +272,7 @@ Compose the human-readable report `<paper-dir>/KILL_ARGUMENT.md`:
 
 If P_4 (or whatever still_unresolved critical) is research-level, record
 it as a known open problem in the conclusion / limitations. If it is
-writing-level, queue for next /auto-paper-improvement-loop round.
+writing-level, queue for the next improvement round.
 ```
 
 Compose the machine-readable `<paper-dir>/KILL_ARGUMENT.json` per the
@@ -401,14 +399,14 @@ To the user:
 - **Adjudicator must classify, not minimize.**  `still_unresolved` is honest if the paper has no effective response.  Don't downgrade to `partially_answered` unless evidence is real.
 - **Author-chosen positions** (e.g., deliberate title scope, deliberate omission of qualifier): mark `partially_answered` with note that the position is intentional, AND say whether the position is sustainable under the attack.  Don't auto-grade as `answered_by_current_text` just because it's intentional.
 - **Verdict is computed by the skill, not by the adjudicator.**  The Codex thread emits per-point classifications; the skill code maps those to one of the 6 audit verdicts via the table in Step 4.  Never let the adjudicator self-grade the top-level verdict.
-- **Detect-only by direct invocation; can be invoked by `/auto-paper-improvement-loop` Step 5.5 which then merges unresolved findings into its fix list.**  When a user runs `/kill-argument paper/` directly, the output is informational and the human decides whether to act.  When the skill is invoked from inside the auto-improvement loop, the loop reads `KILL_ARGUMENT.json`, deduplicates against its existing weakness list, and feeds novel `still_unresolved` points into Step 6 fixes — `/kill-argument` itself never edits paper files.
+- **Detect-only by direct invocation; can be invoked by a caller which then merges unresolved findings into its fix list.**  When a user runs `/kill-argument paper/` directly, the output is informational and the human decides whether to act.  When the skill is invoked from inside the auto-improvement loop, the loop reads `KILL_ARGUMENT.json`, deduplicates against its existing weakness list, and feeds novel `still_unresolved` points into Step 6 fixes — `/kill-argument` itself never edits paper files.
 
 ## When NOT to Use
 
 - Empirical papers without theorems / scope claims — `/research-review` is more useful.  The skill emits `NOT_APPLICABLE` with `reason_code: not_theory_or_scope_paper` in this case.
 - Very early drafts where the headline isn't stable yet — fix the headline first.  The skill emits `NOT_APPLICABLE` with `reason_code: headline_unstable` if the title or abstract changed within the last 2 commits.
 - Papers with ongoing experiments — wait until results stabilize, then run.
-- (`/auto-paper-improvement-loop` Step 5.5 used to run this protocol inline; as of May 2026 it now invokes `/kill-argument` and reads `KILL_ARGUMENT.json` instead, so there is no longer a "do not invoke from inside auto-loop" exclusion.)
+- (a parent workflow's Step 5.5 used to run this protocol inline; as of May 2026 it now invokes `/kill-argument` and reads `KILL_ARGUMENT.json` instead, so there is no longer a "do not invoke from inside auto-loop" exclusion.)
 
 ## Review Tracing
 
@@ -416,4 +414,4 @@ After each `spawn_agent` reviewer call, save the trace following `shared-referen
 
 ## Notes
 
-This skill was extracted as a standalone primitive from `/auto-paper-improvement-loop` Step 5.5 in May 2026, after the protocol proved valuable in surfacing headline-vs-body scope gaps that score-based reviews missed.  The attack-then-defense pattern was kept exactly because of empirical evidence that asking one model to "write the rejection memo" produces qualitatively different feedback than asking it to "review and grade" — the former forces commitment, the latter encourages hedging.
+This skill was extracted as a standalone primitive from a parent workflow's Step 5.5 in May 2026, after the protocol proved valuable in surfacing headline-vs-body scope gaps that score-based reviews missed.  The attack-then-defense pattern was kept exactly because of empirical evidence that asking one model to "write the rejection memo" produces qualitatively different feedback than asking it to "review and grade" — the former forces commitment, the latter encourages hedging.

@@ -67,7 +67,7 @@ PY
 
 If W&B is configured but unavailable, report the connectivity problem and fall back to screen/log/json evidence. Do not interpret missing W&B data as experiment failure by itself.
 
-Always include W&B dashboard links (`run.url`) when available so later review and paper-writing agents can inspect the exact training curves.
+Always include W&B dashboard links (`run.url`) when available so later review and analysis agents can inspect the exact training curves.
 
 ### Step 4: Summarize Results
 

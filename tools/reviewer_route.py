@@ -11,8 +11,8 @@ import sys
 
 ALIASES = {"gemini": "antigravity", "claude": "claude-code", "claude-review": "claude-code"}
 BACKENDS = {"codex", "antigravity", "grok", "claude-code"}
-LEGACY_BACKENDS = {"oracle-pro", "agy", "manual", "copilot", "copilot-native"}
-HOSTS = {"codex", "claude-code", "copilot"}
+LEGACY_BACKENDS = {"oracle-pro", "agy", "manual"}
+HOSTS = {"codex", "claude-code"}
 TOOLS = {
     "antigravity": ("mcp__antigravity__antigravity", "mcp__antigravity__antigravity-reply"),
     "grok": ("mcp__grok__grok", "mcp__grok__grok-reply"),
