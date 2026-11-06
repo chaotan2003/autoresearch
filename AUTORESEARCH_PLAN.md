@@ -57,11 +57,11 @@
 | B0 | 一个可回退的 git 提交点 | 10 分钟 | ✅ 完成（tag `pre-autoresearch`，工作树干净） |
 | B1 | `tools/autoresearch_state.py` 状态机 + 7 个测试 | 2-3 小时 | ✅ 完成（987 passed / 4 skipped） |
 | B2 | DSH 里能真调 agy 和 Codex | 1.5 小时 | 🟡 配置已写入，**等一次 DSH 重启**才算生效 |
-| B3 | 8 个步骤各自能单独跑 | 6-8 小时 | ⬜ 未开始 |
-| B4 | 一条命令跑到闸门，能停能续 | 2 小时 | ⬜ 未开始 |
-| B5 | 文档/测试/装机更新，CI 绿 | 2 小时 | ⬜ 未开始 |
+| B3 | 8 个步骤各自能单独跑 | 6-8 小时 | ✅ 完成（3 个新 skill + 6 个 stage contract；51 skills，987 passed） |
+| B4 | 一条命令跑到闸门，能停能续 | 2 小时 | ✅ 完成（S1→S4 真跑，停在 Gate A；状态跨进程可续） |
+| B5 | 文档/测试/装机更新，CI 绿 | 2 小时 | 🟡 范围已实测：删 `/idea-discovery`、`/idea-discovery-robot`，保留 `experiment-bridge`、`auto-review-loop` |
 
-**已真跑通 S1→S2→S3**（不是模拟）：agy 搜 13 篇全核验 → agy 提 10 个 idea × 7 字段 → codex 独立打分排序。细节见 `AUTORESEARCH_DETAILS.md` 的 K 节。
+**已真跑通 S1→S4 并停在 Gate A**（不是模拟）：agy 搜 13 篇全核验 → agy 提 10 个 idea × 7 字段 → codex 独立打分排序 → agy 查新写方法提案 → 状态机挂起等人签字。细节见 `AUTORESEARCH_DETAILS.md` 的 K、L 节。
 
 ## 下一步
 

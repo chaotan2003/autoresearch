@@ -251,3 +251,26 @@ B2 前置：
 2. **`codex --sandbox workspace-write` 在本机直接失败**：`bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`。必须传 `danger-full-access`。所以 skill 里调 `mcp__codex__codex` 时要显式带 `sandbox: "danger-full-access"`。
 3. **`agy` headless 必须 `--dangerously-skip-permissions`**，否则工具调用被自动拒绝，只回一句 `no output produced`。
 4. **`agy` profile 的 `commandExecutionPolicy` 只接受 `off` / `auto`**；写 `on` 会让该 profile 静默从 `agy agent` 里消失。
+
+## L. S4 → Gate A 试跑（2026-11-06 续）
+
+| 项 | 结果 |
+|---|---|
+| S4 执行体 | `agy --agent aris-scout`，读 `paper_search.md` + `idea_ranking.md` |
+| 产出 | `method_proposal.md` 5.1 KB：top-3 逐个查新（含 closest paper / 一句话 delta / verdict）+ 单一方法提案 |
+| 状态机 | `done` 后 `status = waiting_human`，`gates.jsonl` 追加 `{"gate":"A","event":"awaiting_human"}` |
+| 能停 | 另起一个 Python 进程跑 `next`，仍返回同一个闸门提示（状态在磁盘，不在进程里） |
+| 能续 | 单元测试覆盖 `gate approve → S5`、`gate reject → 留在 S4`、`reopen --stage S1` |
+
+**这一步暴露了一个真问题（闸门存在的理由）**：scout 把 Idea 3 判为 "Incremental"、Idea 6 判为 "Novel"，
+但 Part 2 却选了 Idea 3 写提案。判断自相矛盾，机器校验抓不到（文件存在、字段齐全），只有人看
+Gate A 才能拦。结论：Gate A 不能做成自动通过，必须留给人。
+
+## M. B5 删除范围的实测影响面
+
+| skill | tests 引用 | docs 引用 | 结论 |
+|---|---|---|---|
+| `idea-discovery` | 4 | 13 | 删；但 `check_skills_inventory.py` 的 `iteration_log` 接线检查要从它改指向 `/autoresearch` |
+| `idea-discovery-robot` | 1 | 4 | 删；`--robot` 语义并入 `/autoresearch --robot` |
+| `experiment-bridge` | 1 | 9 | **不删**：它已是 S7 实现阶段，改名 `method-implement` 的成本高于收益（1 个 test + 9 处文档 + 目录/镜像） |
+| `auto-review-loop` | 4 | 15 | **不删**：它是独立的评审闭环（Workflow 2），autoresearch 的 S3/S8 评审不替代它 |
