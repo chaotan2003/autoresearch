@@ -7,6 +7,21 @@ allowed-tools: Bash(*), Read, Grep, Glob, Write, Edit, mcp__codex__codex, mcp__c
 
 # Research Review via External Reviewer Backend (ultra reasoning)
 
+## Autoresearch stage contract
+
+When this skill runs under `/autoresearch` it is stage **S3**. It finishes exactly
+when the state machine says so, and it does not continue into the next stage.
+
+| | |
+|---|---|
+| reads | `research/idea_cards.md` |
+| writes | `research/idea_ranking.md` |
+| actor | Codex (`mcp__codex__codex`, `sandbox: danger-full-access`) |
+| gate after | none |
+
+Close it with `python3 tools/autoresearch_state.py done`, which refuses to pass while a promised file is missing.
+Everything below is this stage's method; the table decides when the stage is done.
+
 > 🔒 **Do not wrap this skill in `/loop`, `/schedule`, or `CronCreate`.** It is
 > verdict-bearing — it produces a cross-model review verdict, multi-round with
 > reviewer thread continuity. An external timer re-fires the verdict on

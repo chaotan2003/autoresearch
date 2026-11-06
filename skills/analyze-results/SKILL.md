@@ -7,6 +7,21 @@ allowed-tools: Bash(*), Read, Grep, Glob, Write, Edit
 
 # Analyze Experiment Results
 
+## Autoresearch stage contract
+
+When this skill runs under `/autoresearch` it is stage **S8**. It finishes exactly
+when the state machine says so, and it does not continue into the next stage.
+
+| | |
+|---|---|
+| reads | `research/research_contract_v1.md` |
+| writes | `research/experiment_analysis.md`, `research/research_decision.md` |
+| actor | DSH runs the matrix, agents analyse |
+| gate after | none (ends the run) |
+
+Close it with `python3 tools/autoresearch_state.py done`, which refuses to pass while a promised file is missing.
+Everything below is this stage's method; the table decides when the stage is done.
+
 Analyze: $ARGUMENTS
 
 ## Workflow

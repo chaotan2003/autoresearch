@@ -7,6 +7,21 @@ allowed-tools: Bash(*), Read, Write, Edit, Grep, Glob, Skill, mcp__codex__codex,
 
 # Workflow 1.5: Experiment Bridge
 
+## Autoresearch stage contract
+
+When this skill runs under `/autoresearch` it is stage **S7**. It finishes exactly
+when the state machine says so, and it does not continue into the next stage.
+
+| | |
+|---|---|
+| reads | `research/research_contract_v1.md` |
+| writes | `research/implementation_report.md` (plus `method/` and `tests/`, which the state machine does not gate on) |
+| actor | Codex (`mcp__codex__codex`, `sandbox: danger-full-access`) |
+| gate after | none |
+
+Close it with `python3 tools/autoresearch_state.py done`, which refuses to pass while a promised file is missing.
+Everything below is this stage's method; the table decides when the stage is done.
+
 > **Before each reviewer slot**, follow [Selectable Reviewers](../shared-references/reviewer-backends.md):
 > resolve invocation → `.aris/reviewer.json` → Claude Code default (Codex MCP)
 > with `reviewer_route.py` through the canonical helper resolver, preserving this

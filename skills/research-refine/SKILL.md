@@ -6,6 +6,21 @@ allowed-tools: Bash(*), Read, Write, Edit, Grep, Glob, WebSearch, WebFetch, mcp_
 
 # Research Refine: Problem-Anchored, Elegant, Frontier-Aware Plan Refinement
 
+## Autoresearch stage contract
+
+When this skill runs under `/autoresearch` it is stage **S4**. It finishes exactly
+when the state machine says so, and it does not continue into the next stage.
+
+| | |
+|---|---|
+| reads | `research/idea_ranking.md`, `research/paper_search.md` |
+| writes | `research/method_proposal.md` |
+| actor | agy scout for novelty + Codex second opinion |
+| gate after | **Gate A** (human) |
+
+Close it with `python3 tools/autoresearch_state.py done`, which refuses to pass while a promised file is missing.
+Everything below is this stage's method; the table decides when the stage is done.
+
 > **Before each reviewer slot**, follow [Selectable Reviewers](../shared-references/reviewer-backends.md):
 > resolve invocation → `.aris/reviewer.json` → Claude Code default (Codex MCP)
 > with `reviewer_route.py` through the canonical helper resolver, preserving this

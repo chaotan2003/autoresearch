@@ -7,6 +7,21 @@ allowed-tools: Bash(*), Read, Write, Grep, Glob, WebSearch, WebFetch, Agent(aris
 
 # Research Idea Creator
 
+## Autoresearch stage contract
+
+When this skill runs under `/autoresearch` it is stage **S2**. It finishes exactly
+when the state machine says so, and it does not continue into the next stage.
+
+| | |
+|---|---|
+| reads | `research/paper_search.md`, `research/baseline_selection.md` |
+| writes | `research/ideas.md`, `research/idea_cards.md` |
+| actor | agy (`mcp__model-worker__worker`) |
+| gate after | none |
+
+Close it with `python3 tools/autoresearch_state.py done`, which refuses to pass while a promised file is missing.
+Everything below is this stage's method; the table decides when the stage is done.
+
 > **Before each reviewer slot**, follow [Selectable Reviewers](../shared-references/reviewer-backends.md):
 > resolve invocation → `.aris/reviewer.json` → Claude Code default (Codex MCP)
 > with `reviewer_route.py` through the canonical helper resolver, preserving this

@@ -5,6 +5,21 @@ description: "Search and analyze research papers, find related work, summarize k
 
 # Research Literature Review
 
+## Autoresearch stage contract
+
+When this skill runs under `/autoresearch` it is stage **S1**. It finishes exactly
+when the state machine says so, and it does not continue into the next stage.
+
+| | |
+|---|---|
+| reads | — (this is the entry stage) |
+| writes | `research/paper_search.md`, `research/baseline_selection.md` |
+| actor | agy scout (`agy --agent aris-scout`, built-in web tools) |
+| gate after | none |
+
+Close it with `python3 "$STATE" done` (resolve `$STATE` as in `/autoresearch` § Helper resolution), which refuses to pass while a promised file is missing.
+Everything below is this stage's method; the table decides when the stage is done.
+
 Research topic: $ARGUMENTS
 
 ## Constants

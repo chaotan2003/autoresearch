@@ -5,6 +5,21 @@ description: "Get a deep critical review of research from a fresh Codex agent or
 
 # Research Review with a Selectable Reviewer
 
+## Autoresearch stage contract
+
+When this skill runs under `/autoresearch` it is stage **S3**. It finishes exactly
+when the state machine says so, and it does not continue into the next stage.
+
+| | |
+|---|---|
+| reads | `research/idea_cards.md` |
+| writes | `research/idea_ranking.md` |
+| actor | Codex (`codex exec`, `sandbox: danger-full-access`) |
+| gate after | none |
+
+Close it with `python3 "$STATE" done` (resolve `$STATE` as in `/autoresearch` § Helper resolution), which refuses to pass while a promised file is missing.
+Everything below is this stage's method; the table decides when the stage is done.
+
 > **Codex assurance:** the fresh base reviewer is same-family. Record
 > `review_independence: same-family` and `acceptance_status: provisional` in
 > traces and deliverables. A selected reviewer can record cross-family accepted

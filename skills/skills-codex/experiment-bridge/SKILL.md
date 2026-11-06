@@ -5,6 +5,21 @@ description: "Workflow 1.5: Bridge between idea discovery and auto review. Reads
 
 # Workflow 1.5: Experiment Bridge
 
+## Autoresearch stage contract
+
+When this skill runs under `/autoresearch` it is stage **S7**. It finishes exactly
+when the state machine says so, and it does not continue into the next stage.
+
+| | |
+|---|---|
+| reads | `research/research_contract_v1.md` |
+| writes | `research/implementation_report.md` (plus `method/` and `tests/`, which the state machine does not gate on) |
+| actor | Codex (`codex exec`, `sandbox: danger-full-access`) |
+| gate after | none |
+
+Close it with `python3 "$STATE" done` (resolve `$STATE` as in `/autoresearch` § Helper resolution), which refuses to pass while a promised file is missing.
+Everything below is this stage's method; the table decides when the stage is done.
+
 > **Before each reviewer slot**, follow [Selectable Reviewers](../shared-references/reviewer-backends.md):
 > resolve invocation → `.aris/reviewer.json` → Codex default (fresh native reviewer)
 > with `reviewer_route.py` through the canonical helper resolver, preserving this
