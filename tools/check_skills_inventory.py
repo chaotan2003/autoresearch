@@ -33,29 +33,21 @@ FORBIDDEN_CODEX_REVIEWER_STRINGS = (
 # section means adding it to both READMEs AND extending this list.
 REQUIRED_README_ANCHORS = (
     "contents",
-    "more-than-just-a-prompt",
-    "whats-new",
+    "the-eight-stages",
+    "how-a-stage-runs",
     "quick-start",
-    "features",
-    "score-progression",
-    "community-showcase",
-    "awesome-community-skills",
-    "workflows",
-    "skills-catalog",
-    "setup",
-    "customization",
-    "alternative-model-combinations",
-    "community",
-    "citation",
-    "star-history",
-    "acknowledgements",
-    "license",
-    "prerequisites",
-    "install-skills",
-    "gpu-server-setup",
-    "alt-a-glm--gpt",
-    "-optional-gpt-54-pro-via-oracle",
-    "-research-wiki--persistent-research-memory",
+    "mcp-servers",
+    "repository-layout",
+    "skills-and-mirrors",
+    "what-is-enforced-and-what-is-not",
+    "development",
+    "attribution-and-license",
+    # Legacy setup fragments still linked from installed projects.
+    "101-prerequisites",
+    "102-install-skills",
+    "103-update-skills",
+    "104-usage",
+    "105--auto-allow-for-overnight-runs-optional",
 )
 
 
@@ -168,10 +160,8 @@ def check_inventory() -> list[str]:
     expected_count = len(main)
     count_checks = [
         (CATALOG, catalog_text, r"\*\*(?P<count>\d+) skills\*\*"),
-        (README, readme, r"📊\s+\*\*(?P<count>\d+) composable skills\*\*"),
-        (README, readme, r"ARIS ships \*\*(?P<count>\d+)\+ skills\*\*"),
-        (README_CN, readme_cn, r"📊\s+\*\*(?P<count>\d+) 个可组合 skill\*\*"),
-        (README_CN, readme_cn, r"ARIS 现有 \*\*(?P<count>\d+)\+ 个 skill\*\*"),
+        (README, readme, r"(?P<count>\d+) skills, Markdown specs"),
+        (README_CN, readme_cn, r"(?P<count>\d+) 个 skill，agent CLI 加载的 Markdown 规格"),
         (AGENT_GUIDE, agent_guide, r"Full catalog.*?\*\*(?P<count>\d+) skills\*\*"),
         (ARIS_INTRO, aris_intro, r"collection of \*\*(?P<count>\d+) composable Claude Code skills\*\*"),
         (ARIS_INTRO, aris_intro, r"## The (?P<count>\d+) Skills"),
@@ -201,8 +191,8 @@ def check_inventory() -> list[str]:
 
     en_h2 = numbered_h2_count(readme)
     cn_h2 = numbered_h2_count(readme_cn)
-    require(en_h2 == 16, f"README.md has {en_h2} numbered H2 sections; expected 16 (Phase A)", failures)
-    require(cn_h2 == 16, f"README_CN.md has {cn_h2} numbered H2 sections; expected 16 (Phase A)", failures)
+    require(en_h2 == 9, f"README.md has {en_h2} numbered H2 sections; expected 9 (Phase A)", failures)
+    require(cn_h2 == 9, f"README_CN.md has {cn_h2} numbered H2 sections; expected 9 (Phase A)", failures)
 
     # Agent-grant hygiene (WB2): `Agent` in allowed-tools is the Tier-2
     # fan-out capability gate. Per shared-references/fan-out-pattern.md it is

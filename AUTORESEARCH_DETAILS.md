@@ -35,15 +35,15 @@
 
 **每个 stage 启动时自动读 `research/human_notes.md`**（不存在就跳过）；stage 结束时把自己的疑问以 `## <stage> 待确认` 段追加进去，形成双向对话。
 
-## B. 文件最小字段（缺字段 = stage 未完成，`tools/autoresearch_state.py --validate` 会拦）
+## B. 文件最小字段（缺字段 = stage 未完成；现阶段靠 skill 自检 + `done` 检查文件是否存在）
 
 | 文件 | 必含字段 |
 |---|---|
 | `paper_search.md` | 每篇：标题/会议年份/链接/代码仓库/摘要/核心问题/数学方法/实验设置/结果/局限/缺口 |
 | `baseline_selection.md` | 推荐 baseline + 3 条理由 + 代码环境数据算力需求 + 复现指标 + 可改模块 |
-| `ideas.md` | 每个：研究问题/方法概述/数学机制/与 baseline 差异/预期指标/可能失败原因/**可证伪假设** |
-| `idea_cards.md` | 每卡：5 维评分（假设成立性、数学一致性、兼容性、成本、风险）+ 依据 + **GO/REVISE/KILL** |
-| `idea_ranking.md` | 排序 + 推荐 + 为什么不是第一名 |
+| `ideas.md` | 10 条一句话 research question（编号 1–10，不含评分） |
+| `idea_cards.md` | 每卡 7 字段：claim / method sketch / needs / smallest experiment / expected outcome / risk / novelty check。**不含排名词** |
+| `idea_ranking.md` | 评分表（novelty / feasibility / falsifiability / payoff 各 1–5 + total）+ top 3 + 弱项列表 + 为什么不是第一名 |
 | `method_proposal.md` | RQ / Hypothesis / 数学定义与推导 / 与 baseline 差异 / 模块与接口 / 创新性证据 / 预期贡献与风险 |
 | `baseline_report.md` | 复现指标 vs 论文指标（逐项偏差）+ 失败案例 + 环境快照 + 未复现项及原因 |
 | `research_contract_v1.md` | Hypothesis / Method Spec / Experimental Protocol / **Success Signal** / **Failure Signal** / Ablation Plan / Resource Budget / Decision Rules |
@@ -54,32 +54,47 @@
 
 ## C. 状态机
 
+`tools/autoresearch_state.py` 实际写出的 `.autoresearch/state.json`（2026-11-06 试跑原文，节选）：
+
 ```json
-{ "run_id": "run_20260815_ab12cd34",
-  "stage": "S5",
+{ "schema": 1,
+  "direction": "test-time compute scaling for LLM reasoning: …",
+  "root": "research",
+  "stage": "S4",
   "status": "waiting_human",
-  "contract_version": "v1",
-  "artifacts": { "method_proposal.md": {"sha256": "...", "by": "DSH", "at": "..."} },
-  "gates": { "human_method_approved": false, "contract_frozen": false } }
+  "contract": { "version": 1, "sha256": null, "frozen_at": null },
+  "artifacts": {
+    "S1": ["research/paper_search.md", "research/baseline_selection.md"],
+    "S2": ["research/ideas.md", "research/idea_cards.md"],
+    "S3": ["research/idea_ranking.md"],
+    "S4": ["research/method_proposal.md"] },
+  "history": [
+    { "at": "2026-11-06T07:30:40+00:00", "event": "done", "stage": "S1",
+      "artifacts": ["…"], "note": "13 papers, 13/13 verified" } ] }
 ```
 
-- `status ∈ {pending, running, blocked, waiting_human, done}`
-- 进 S5 前 `human_method_approved=true`；进 S7 前 `contract_frozen=true`
-- S8 出 `Revise` → `stage=S4`、`contract_version++`，旧 contract 只读
+- `status ∈ {pending, running, waiting_human, finished, failed}`
+- `stage` 只是当前步骤号；下一步读 `STAGES[stage]` 的 actor/reads/writes，不另存计划
+- Gate A 把 `status` 从 `waiting_human` 放回 `pending` 才进 S5；Gate B 同样放行才进 S7
+- S8 出 `Revise` → `reopen --stage S4`，合同要 `--contract-version 2` 才能重建
 
 **三类人工接触点要分开记，别混成一个**：
 
 | 类型 | 位置 | 引擎行为 | 记录 |
 |---|---|---|---|
-| Gate A 方法批准 | S4→S5 | 进 `waiting_human`，**阻塞流水线** | `gates.jsonl` + `human_method_approved=true` |
-| Gate B 契约冻结 | S6→S7 | 进 `waiting_human`，记 sha256 后解锁 | `contract_frozen=true` |
-| Decision C/R/K | S8 末尾 | **不阻塞**：本 run 已到终点，等你选 Continue/Revise/Kill 才开下一 run | `research_decision.md` + `gates.jsonl` |
+| Gate A 方法批准 | S4→S5 | `status=waiting_human`，**阻塞流水线** | `gates.jsonl` 一行 + `history` 一条 |
+| Gate B 合同冻结 | S6→S7 | `status=waiting_human`，`done` 时已记 sha256 | `gates.jsonl` 一行（带 `contract_sha256`） |
+| Decision C/R/K | S8 末尾 | **不阻塞**：本 run 已 `finished`，等你选 Continue/Revise/Kill 才开下一 run | `research_decision.md` + `gates.jsonl` |
 
-## D. 三条防造假硬约束
+## D. 三条防造假约束的实现现状（2026-11-06 核对）
 
-1. **Contract 不可变**：S6 冻结记 sha256；`tools/contract_guard.py` 在 S7/S8 启动前校验，改过 → `BLOCKED`，只能新建 v2。
-2. **Claim→证据链**：`tools/evidence_chain.py` 要求每个 claim 落到 `experiment_results/<run_id>/` 真实文件；缺失 → 标 `UNADJUDICATED`。
-3. **产物只增不改**：`experiment_results/`、`baseline_logs/` 只允许新目录，禁止改写（hook + git 检查）。
+| 约束 | 现状 | 说明 |
+|---|---|---|
+| 1. Contract 不可变 | **代码强制（一半）** | S6 `done` 记 sha256，同一步再 `done` 且内容变了直接拒绝，除非 `--contract-version 2`。**缺**：S7/S8 启动时不回头比对 hash，改文件不会被拦 |
+| 2. Claim→证据链 | **只有规则** | `skills/autoresearch/SKILL.md` 要求每个 claim 落到 `experiment_results/<run>/` 真实文件；仓库里**没有** `evidence_chain.py`，也没有 `UNADJUDICATED` 标记器 |
+| 3. 产物只增不改 | **只有约定** | `experiment_results/`、`baseline_logs/` 只允许新目录；没有 hook、没有 git 检查强制 |
+
+补法（按优先级）：① `start` 时若 `contract.sha256` 非空就比对盘上文件；② 写 `tools/evidence_chain.py` 扫合同 claim id → 对应结果文件，缺失标 `UNADJUDICATED`；③ 把每次 agent 调用写入 `.autoresearch/traces/`（目录已建，目前无写入方）。
 
 ## E. 现成方案调研（GitHub，2026-11）：不引入外部多 Agent 框架
 
@@ -165,35 +180,33 @@ B2 前置：
 
 **回退链**：MCP 不可用 → CLI 直调（`codex exec` / `agy`，新进程、上下文天然干净）→ 再不行写 `.autoresearch/traces/.../manual_request.md` 人工搬运。三条路径产物契约一致，回退不改 stage 逻辑。
 
-## G. 要动哪些文件
+## G. 实际改了什么（B0–B5 跑完后的账）
 
-**新增 3 个 skill**：`baseline-repro`（S5）、`research-contract`（S6）、`autoresearch`（编排器，由 `/idea-discovery` 改写）。
+| 计划项 | 实际 | 说明 |
+|---|---|---|
+| 新增 3 个 skill | ✅ 3/3 | `autoresearch`（编排器）、`baseline-repro`（S5）、`research-contract`（S6） |
+| 改写 6 个 skill | ✅ 6/6 | `research-lit`→S1、`idea-creator`→S2、`research-review`→S3、`research-refine`→S4、`experiment-bridge`→S7、`analyze-results`→S8；每个加一段 `## Autoresearch stage contract`，主树 + Codex 镜像同步改 |
+| 删旧编排器 | ✅ 2 个（原计划 4 个） | 删了 `/idea-discovery`、`/idea-discovery-robot`；**保留** `/experiment-bridge`（已变成 S7 的执行体）和 `/auto-review-loop`（独立评审闭环，不被 autoresearch 替代）。缩小删除范围是因为实测影响面：每个编排器牵动 4–5 个测试、13–17 处文档引用 |
+| `tools/autoresearch_state.py` | ✅ | 8 阶段、双闸门、artifact 存在性、合同 sha256 冻结、`gates.jsonl` 追加 |
+| `tools/contract_guard.py` | ❌ 未单独实现 | 冻结逻辑并进了状态机：S6 `done` 算 hash，再 `done` 内容变了就拒绝。但 S7/S8 启动**不回头校验**（见 D 节） |
+| `tools/evidence_chain.py` | ❌ 未实现 | claim→实验文件追溯目前只是 SKILL 里的规则 |
+| `templates/RESEARCH_CONTRACT_TEMPLATE.md` | ✅ | 合同字段模板 |
+| `tools/skill-groups.tsv` 新增 `autoresearch` 组 | ✅ | 见文件第 77 行 |
+| `docs/SKILLS_CATALOG.md`、`AGENT_GUIDE.md`、镜像 | ✅ | 49 skills 一致；`check_skills_inventory.py` 通过 |
+| `install_aris.sh` 装 agy profile + 打印 MCP YAML | ❌ 未做 | 现状是 README 3.1 里的手工 `cp` 三步。换机器漏装会报 `unknown agent` |
+| `.gitignore` 忽略实验产物 | ❌ 未做 | 目前靠约定 |
 
-**改写 6 个**：`research-lit`→S1 双文件；`idea-creator`→S2 字段；`research-review`→S3 评分卡；`research-refine`→S4 提案；`experiment-bridge`→`method-implement`；`analyze-results`→S8 决策面。
+## H. 验收标准与实测结果（2026-11-06）
 
-**删除 4 个旧编排器**：`/idea-discovery`、`/experiment-bridge`、`/auto-review-loop`、`/idea-discovery-robot`（机器人特化改成 `/autoresearch --robot`）。约 30 个原子 skill 保留不动。
-
-**新增 3 个 tool**：
-- `tools/autoresearch_state.py` — state 读写、gate 检查、stage 迁移、`--validate` 字段校验
-- `tools/contract_guard.py` — 冻结与变更加固
-- `tools/evidence_chain.py` — claim↔实验追溯
-
-**配套**：
-- `templates/RESEARCH_CONTRACT_TEMPLATE.md` → 预注册字段（Success/Failure Signal、Decision Rules、v2 规则）
-- `tools/skill-groups.tsv` → 新增 `autoresearch` 组；删掉退役的 4 个
-- `docs/SKILLS_CATALOG.md`、`AGENT_GUIDE.md`、装机脚本、Feishu 通知模板
-- `.gitignore` → 忽略实验产物（logs/weights/checkpoints），保留 `research/*.md`
-- `install_aris.sh` → 可选步骤：装两个 `.md` 到 `~/.gemini/config/agents/`；打印 F 节的 `- insert:` YAML
-
-## H. 验收标准（可测）
-
-1. `dsh --profile web --dump-config` 能看到 3 条 `@deepseek-ai/dsh-mcp-client`；进 DSH 后三个工具各成功调用一次（`model-worker` 要真写出一个文件）。
-2. 空项目装 `--groups autoresearch` 后，`/autoresearch "方向"` 能从 S1 走到 S4 并**停在 human gate**。
-3. `--resume` 能从 `waiting_human` 继续；kill 进程重开不丢状态。
-4. 8 个 stage 文件按 B 节字段生成（`autoresearch_state.py --validate` 通过）。
-5. 篡改 `research_contract_v1.md` 后启动 S7 → `BLOCKED`。
-6. 删掉一个 `experiment_results/` 目录 → `evidence_chain.py` 报出受影响 claim。
-7. `pytest tests/ -q` 全绿；`check_skills_inventory.py` consistent。
+| # | 标准 | 结果 |
+|---|---|---|
+| 1 | DSH 里 4 个 MCP 各成功调用一次 | ✅ 4/4（`model-scout` 真写出 `mcp-smoke-dsh.md`；`antigravity` 首次报 `unknown agent "aris-antigravity-review"`，补装 profile 后通过） |
+| 2 | `/autoresearch "方向"` 从 S1 走到 S4 并停在 human gate | ✅ 真跑：13 篇文献全核验 → 10 idea 卡 → Codex 打分 → 方法提案 → `waiting_human` |
+| 3 | `--resume` 能从 `waiting_human` 继续，进程重启不丢状态 | ✅ 另一进程 `status` 读到同一状态（`--resume` 在 SKILL 里映射为 `next`） |
+| 4 | 8 个 stage 文件按 B 节字段生成 | ⚠️ 只实测 S1–S4；S5–S8 未跑过（demo 无 GPU）。`--validate` 选项**不存在**：字段完整性靠 SKILL 自检 + `done` 的文件存在性检查 |
+| 5 | 篡改 `research_contract_v1.md` 后启动 S7 → `BLOCKED` | ❌ 未实现。只有 S6 的 `done` 会比对 hash，S7 启动不校验 |
+| 6 | 删掉一个 `experiment_results/` 目录 → 报出受影响 claim | ❌ 未实现（同 5，`evidence_chain.py` 不存在） |
+| 7 | `pytest tests/ -q` 全绿；库存检查一致 | ✅ `961 passed / 4 skipped`，`ARIS skill inventory is consistent.` |
 
 ## I. 决策记录
 
@@ -297,7 +310,7 @@ Gate A 才能拦。结论：Gate A 不能做成自动通过，必须留给人。
 规则：**模型名里的 `-low/-medium/-high` 就是 effort 档位，两个参数必须同档，或者只传其中一个。**
 `model: gemini-3.8-flash-high` 配 `effort: high` 正确；配 `medium` 会 500 前失败。
 
-## O. B5 已做 / 待做（迁移地图）
+## O. B5 迁移地图（历史记录，完成状态见 P 节）
 
 ### 已做（2026-11-06 round 2，零风险部分）
 

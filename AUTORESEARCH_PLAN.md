@@ -52,18 +52,30 @@
 
 ## 进度（2026-11-06）
 
-| 批次 | 你能看到什么 | 时间 | 状态 |
-|---|---|---|---|
-| B0 | 一个可回退的 git 提交点 | 10 分钟 | ✅ 完成（tag `pre-autoresearch`，工作树干净） |
-| B1 | `tools/autoresearch_state.py` 状态机 + 7 个测试 | 2-3 小时 | ✅ 完成（987 passed / 4 skipped） |
-| B2 | DSH 里能真调 agy 和 Codex | 1.5 小时 | ✅ MCP 服务端协议级实测通过（整条链路真写出文件）；4 个条目已写入 DSH 配置，**等一次重启**加载 |
-| B3 | 8 个步骤各自能单独跑 | 6-8 小时 | ✅ 完成（3 个新 skill + 6 个 stage contract；51 skills，987 passed） |
-| B4 | 一条命令跑到闸门，能停能续 | 2 小时 | ✅ 完成（S1→S4 真跑，停在 Gate A；状态跨进程可续） |
-| B5 | 文档/测试/装机更新，CI 绿 | 2 小时 | ✅ 完成：删除 `/idea-discovery`、`/idea-discovery-robot` 及其工具/测试/镜像；**49 skills**，961 passed |
+| 批次 | 你能看到什么 | 状态 |
+|---|---|---|
+| B0 | 一个可回退的 git 提交点 | ✅ tag `pre-autoresearch` |
+| B1 | `tools/autoresearch_state.py` 状态机 + 7 个测试 | ✅ 完成 |
+| B2 | DSH 里能真调 agy 和 Codex | ✅ 4/4 个 MCP 入口在 DSH 内实测调用成功（`model-scout` 真写出文件） |
+| B3 | 8 个步骤各自能单独跑 | ✅ 3 个新 skill + 6 段 stage contract |
+| B4 | 一条命令跑到闸门，能停能续 | ✅ S1→S4 真跑，停在 Gate A；状态跨进程可续 |
+| B5 | 文档/测试/装机更新 | ✅ 删 2 个旧编排器；**49 skills**，961 passed |
 
-**已真跑通 S1→S4 并停在 Gate A**（不是模拟）：agy 搜 13 篇全核验 → agy 提 10 个 idea × 7 字段 → codex 独立打分排序 → agy 查新写方法提案 → 状态机挂起等人签字。细节见 `AUTORESEARCH_DETAILS.md` 的 K、L 节。
+**已真跑通 S1→S4 并停在 Gate A**（不是模拟）：agy 搜 13 篇全核验 → agy 提 10 个
+idea × 7 字段 → codex 独立打分排序 → agy 查新写方法提案 → 状态机挂起等人签字。
+细节见 `AUTORESEARCH_DETAILS.md` 的 K、L 节。
 
-## 下一步
+## 已知缺口（诚实版）
 
-- **"继续 B3"** → 改 6 个旧 skill + 新写 3 个（`/autoresearch`、`baseline-repro`、`research-contract`）
-- **"先重启 DSH"** → 让 B2 的 4 个 MCP 生效，我再实测 `mcp__model-scout__worker`
+1. **合同冻结只记不查**：S6 记了 sha256，但 S7/S8 启动时不回头比对，改文件不会被拦。
+2. **没有 `evidence_chain.py`**：合同每条 claim 映射到真实实验文件，目前是 SKILL 里的规则，不是校验器。
+3. **`.autoresearch/traces/` 不会自动写入**：目录会建，但没有任何东西往里写 brief/回复/diff。
+4. **`install_aris.sh` 不装 agy profile**：换机器要手工 `cp` 三个 `.md` 到 `~/.gemini/config/agents/`，漏了就报 `unknown agent`。
+5. **S5–S8 从未真跑过**：demo 停在 Gate A，且 S5 复现 baseline 需要 GPU。
+
+文档与代码的一致性：README §7 是同一份清单，`AUTORESEARCH_DETAILS.md` §D/§H 记录了核对结果。
+
+## 下一步（可选）
+
+- **"补缺口 1+2"**：约 1 小时，把信任链闭合（合同启动校验 + claim 证据链校验器）
+- **"跑 S5–S8"**：需要 GPU；没有 GPU 就先只验状态机链路，报告里如实标注 baseline 未复现
