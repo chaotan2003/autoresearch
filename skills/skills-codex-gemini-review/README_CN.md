@@ -23,8 +23,6 @@
 当前覆盖的技能（7 个）：
 
 - `idea-creator`
-- `idea-discovery`
-- `idea-discovery-robot`
 - `research-review`
 - `novelty-check`
 - `research-refine`
@@ -39,8 +37,6 @@
   - `auto-review-loop`
   - `idea-creator`
 - **2 个 wrapper**：主要串联下游 reviewer-aware skill，并传递 `REVIEWER_MODEL=gemini-review`
-  - `idea-discovery`
-  - `idea-discovery-robot`
 
 ## 安装方式
 

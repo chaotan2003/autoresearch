@@ -50,15 +50,15 @@ different model family goes looking for the ones it forgot to declare.
 | The ask | Route |
 |---|---|
 | "implement X" / "build me something that does X" / "prototype then extend" | **this skill** |
-| "find me a research direction and take it to a paper" | `/idea-discovery` → `/experiment-bridge` |
+| "find me a research direction and take it to a paper" | `/autoresearch` → `/experiment-bridge` |
 | "I have `EXPERIMENT_PLAN.md` — run the campaign, deploy to GPU" | `/experiment-bridge` |
 | "sweep these parameters / find the best config" | `/dse-loop` |
 | "launch what is already written" | `/run-experiment` |
 | "do these results support the claim?" | `/result-to-claim` |
 
-### Relationship to `/idea-discovery` and `/experiment-bridge`
+### Relationship to `/autoresearch` and `/experiment-bridge`
 
-`/idea-discovery` answers *"what should we research?"* and decides the question
+`/autoresearch` answers *"what should we research?"* and decides the question
 for you. This skill answers *"build the thing I already decided on"* and decides
 **nothing** of consequence without writing it down. Different input contracts,
 so they are different entry points rather than a mode flag — but they compose: an

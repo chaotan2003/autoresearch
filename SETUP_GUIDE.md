@@ -75,7 +75,7 @@ bash ~/aris_repo/tools/install_aris.sh
 # Install only what you need (selective install):
 bash ~/aris_repo/tools/install_aris.sh --list-groups                  # show the 6 skill groups
 bash ~/aris_repo/tools/install_aris.sh --groups ideation,experiments  # install by group
-bash ~/aris_repo/tools/install_aris.sh --skills idea-discovery        # by skill (hard deps auto-included)
+bash ~/aris_repo/tools/install_aris.sh --skills autoresearch        # by skill (hard deps auto-included)
 # A fresh install with no selection flags (run in a terminal) opens a checkbox picker (Space toggles, group rows toggle all)
 
 # Other useful flags:
@@ -267,7 +267,7 @@ You're now ready to use ARIS research workflows:
 
 ```
 claude
-> /idea-discovery "your research direction"          # Workflow 1 — be specific! not "NLP" but "factorized gap in discrete diffusion LMs"
+> /autoresearch "your research direction"          # Workflow 1 — be specific! not "NLP" but "factorized gap in discrete diffusion LMs"
 > /experiment-bridge                                 # Workflow 1.5 — have a plan? implement + deploy + collect results
 > /auto-review-loop "your results or scope"          # Workflow 2: review → fix → re-review until positive
 ```

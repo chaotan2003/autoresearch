@@ -1,6 +1,6 @@
 # Resumable Runs
 
-A long ARIS workflow (`/research-pipeline`, `/paper-writing`, `/idea-discovery`)
+A long ARIS workflow (`/research-pipeline`, `/paper-writing`, `/autoresearch`)
 can fail mid-run — a rate limit, a crash, an overnight timeout. Today there is no
 record of *which phase finished*, so a resume restarts from scratch (this is the
 live complaint in issue #272: "the survey run failed — can it continue from the

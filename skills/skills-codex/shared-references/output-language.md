@@ -32,7 +32,7 @@ Determine the output language using this priority:
 | Skill | Language Support | Notes |
 |-------|-----------------|-------|
 | /idea-creator | Full | IDEA_REPORT.md follows language setting |
-| /idea-discovery | Full | Inherits from sub-skills |
+| /autoresearch | Full | Inherits from sub-skills |
 | /analyze-results | Full | Result analysis follows language setting |
 | /auto-review-loop | Partial | AUTO_REVIEW.md follows setting; reviewer prompts stay English |
 | /experiment-plan | Full | EXPERIMENT_PLAN.md follows setting |

@@ -339,3 +339,29 @@ Gate A 才能拦。结论：Gate A 不能做成自动通过，必须留给人。
 测试文件 + 1 个工具 + 1 个检查器，任何一处漏改都会让仓库变红；必须一次提交改完并
 跑两次全量测试。弃用横幅 + 目录下架 + 写回迁移已经把"用户不会被引导到旧编排器"这件事
 先落地了。
+
+## P. B5 完成（2026-11-06 round 3）
+
+按 O 节清单一次改完，单次提交：
+
+| 项 | 结果 |
+|---|---|
+| 删除目录 | `skills/idea-discovery/`、`skills/idea-discovery-robot/` + 2 个 Codex 镜像 |
+| 删除测试 | `test_auto_proceed_contract.py`（127 行）、`test_idea_discovery_gate.py`（400 行） |
+| 删除工具 | `tools/idea_discovery_gate.py`（删 skill 后成孤儿） |
+| 冻结 overlay | `skills-codex-gemini-review/` 移出这 2 个副本（7 → 5），README 同步 |
+| 引用改写 | 26 个文件的 `/idea-discovery` → `/autoresearch`（含 5 个 shared-reference、8 个 skill、模板） |
+| 库存 | `skill-groups.tsv` / `SKILLS_CATALOG.md` 各删 2 行；11 处 live count **51 → 49** |
+| 检查器 | `iteration_log` 接线检查改读 `idea-creator`（内容已在 round 2 写回） |
+| 结果 | **961 passed / 4 skipped**，`ARIS skill inventory is consistent.`（49 skills） |
+
+**保留不删**（并记入本节以免以后被误删）：
+
+- `experiment-bridge` —— 它就是 S7 实现阶段的执行体，改名 `method-implement` 的成本
+  （1 个 test + 9 处文档 + 目录/镜像/计数）高于收益。
+- `auto-review-loop` —— 独立的多轮评审闭环（Workflow 2），autoresearch 的 S3/S8 评审
+  只是在流水线里各用一次，不构成替代。
+
+**遗留内部标识**：`tools/run_state.py` 与 `tests/test_run_state.py` 里仍有字符串
+`idea-discovery-evidence`，它是 run_state 的 gate **名字**（测试夹具），不是 skill 引用，
+改名会影响历史 run 记录的可读性，故保留。

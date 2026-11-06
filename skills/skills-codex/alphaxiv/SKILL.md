@@ -183,4 +183,4 @@ This saves significant tokens by filtering out marginally relevant papers before
 
 ### As follow-up from other skills
 
-After `/research-lit`, `/novelty-check`, or `/idea-discovery` surface a specific paper, users can invoke `/alphaxiv PAPER_ID` for a fast deep-dive without re-running the full survey.
+After `/research-lit`, `/novelty-check`, or `/autoresearch` surface a specific paper, users can invoke `/alphaxiv PAPER_ID` for a fast deep-dive without re-running the full survey.

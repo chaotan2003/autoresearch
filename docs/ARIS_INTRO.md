@@ -4,7 +4,7 @@
 
 ## TL;DR
 
-ARIS is a collection of **51 composable Claude Code skills** that orchestrate **cross-model collaboration**: Claude Code drives the research (reads files, writes code, deploys experiments) while an external LLM (GPT-6-Astra via [Codex MCP](https://github.com/openai/codex)) acts as a critical reviewer. The two models disagree, debate, and force each other to do better — adversarial, not self-play.
+ARIS is a collection of **49 composable Claude Code skills** that orchestrate **cross-model collaboration**: Claude Code drives the research (reads files, writes code, deploys experiments) while an external LLM (GPT-6-Astra via [Codex MCP](https://github.com/openai/codex)) acts as a critical reviewer. The two models disagree, debate, and force each other to do better — adversarial, not self-play.
 
 Three workflows (W1 / W1.5 / W2) compose into a full research lifecycle: idea discovery → experiment bridge → auto-review → submission. Tested end-to-end on real ICLR/NeurIPS submissions. Score progression on a real overnight run: **5/10 → 7.5/10 with 20+ GPU experiments**.
 
@@ -67,7 +67,7 @@ Every review round uses a **fresh codex thread**. We never use `codex-reply` to 
 
 | W | Name | One-line summary | Entry point |
 |:--:|------|------------------|-------------|
-| **1** | Idea Discovery | Literature → brainstorm 8-12 → novelty check → pilot 2-3 on GPU → ranked report | [`/idea-discovery`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/idea-discovery/SKILL.md) |
+| **1** | Idea Discovery | Literature → brainstorm 8-12 → novelty check → pilot 2-3 on GPU → ranked report | [`/autoresearch`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/autoresearch/SKILL.md) |
 | **1.5** | Experiment Bridge | Plan → implement → GPT-6-Astra code review → sanity check → deploy → collect | [`/experiment-bridge`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/experiment-bridge/SKILL.md) |
 | **2** | Auto Review Loop | Review → fix → re-run → repeat until score ≥ 6/10 (or `MAX_ROUNDS=4` hit) | [`/auto-review-loop`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/auto-review-loop/SKILL.md) |
 
@@ -75,7 +75,7 @@ Every review round uses a **fresh codex thread**. We never use `codex-reply` to 
 
 > **"I have a research direction. What should I actually work on?"**
 
-[`/idea-discovery`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/idea-discovery/SKILL.md) takes a vague research direction and outputs a ranked, pilot-validated proposal:
+[`/autoresearch`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/autoresearch/SKILL.md) takes a vague research direction and outputs a ranked, pilot-validated proposal:
 
 1. 📚 **Survey** — multi-source literature search (Zotero / Obsidian / arXiv / Semantic Scholar / DeepXiv / Exa) builds a landscape map
 2. 🧠 **Brainstorm** — GPT-6-Astra xhigh generates 8-12 concrete ideas anchored to identified gaps
@@ -84,7 +84,7 @@ Every review round uses a **fresh codex thread**. We never use `codex-reply` to 
 5. 🏆 **Refine** — top pilot result fed to [`/research-refine`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/skills/research-refine/SKILL.md) which anchors the problem, tightens the method, and emits an experiment plan ready for Workflow 1.5
 
 ```bash
-/idea-discovery "factorized gap in discrete diffusion LMs" \
+/autoresearch "factorized gap in discrete diffusion LMs" \
     --- effort: max \
     --- sources: zotero, web, deepxiv
 ```
@@ -177,7 +177,7 @@ A real overnight 4-round run on an ML research project, from borderline reject t
 
 ---
 
-## The 51 Skills
+## The 49 Skills
 
 Grouped by role (full catalog: [`docs/SKILLS_CATALOG.md`](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep/blob/main/docs/SKILLS_CATALOG.md)).
 
@@ -217,7 +217,7 @@ ARIS skills are plain `SKILL.md` files. They run anywhere an agent reads markdow
 
 ## 中文版速览
 
-ARIS（**A**utonomous **R**esearch via Adversarial **M**ulti-Agent Collaboration，**梦中科研**）是一组 51 个可组合的 Claude Code skills，编排**跨模型对抗式协作**：
+ARIS（**A**utonomous **R**esearch via Adversarial **M**ulti-Agent Collaboration，**梦中科研**）是一组 49 个可组合的 Claude Code skills，编排**跨模型对抗式协作**：
 
 - **执行**：Claude Code 读文件、写代码、跑实验、改论文
 - **审稿**：GPT-6-Astra（via [Codex MCP](https://github.com/openai/codex)）以**跨家族**审稿人身份打分、找弱点、提建议
@@ -246,7 +246,7 @@ claude mcp add codex -s user -- python3 "$HOME/aris_repo/mcp-servers/codex-exec/
 
 # 4. Use in Claude Code
 claude
-> /idea-discovery "factorized gap in discrete diffusion LMs"
+> /autoresearch "factorized gap in discrete diffusion LMs"
 ```
 
 > ⚙️ **Alternative model combinations** — no Claude or OpenAI API required. See the [Alt routes](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep#-alternative-model-combinations) (Alt B/E for GLM × MiniMax-M3 or free DeepSeek-V3.1 via ModelScope; nine routes total, including Antigravity-as-executor and Gemini-direct-API-as-reviewer).

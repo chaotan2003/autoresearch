@@ -8,7 +8,7 @@ lists — the very duplication this protocol family exists to prevent (see
 one entry per output file as below.
 
 > Threshold rationale: the original "log *every* output to MANIFEST" rule is what
-> drove the `MANIFEST.md` clutter in small idea-discovery runs. A manifest earns its
+> drove the `MANIFEST.md` clutter in small autoresearch runs. A manifest earns its
 > keep only when there are enough artifacts that an index genuinely helps.
 
 ## Format
@@ -27,15 +27,15 @@ If `MANIFEST.md` does not exist, create it with this header:
 Then append one row per output file written:
 
 ```
-| 2025-06-15 14:30 | /idea-creator | idea-stage/IDEA_REPORT_20250615_143022.md | idea-discovery | 12 ideas generated from "LLM reasoning" direction |
-| 2025-06-15 14:30 | /idea-creator | idea-stage/IDEA_REPORT.md | idea-discovery | latest copy |
+| 2025-06-15 14:30 | /idea-creator | idea-stage/IDEA_REPORT_20250615_143022.md | autoresearch | 12 ideas generated from "LLM reasoning" direction |
+| 2025-06-15 14:30 | /idea-creator | idea-stage/IDEA_REPORT.md | autoresearch | latest copy |
 ```
 
 ## Stage Values
 
 | Stage | Skills |
 |-------|--------|
-| `idea-discovery` | /idea-creator, /idea-discovery, /novelty-check, /research-review |
+| `autoresearch` | /idea-creator, /autoresearch, /novelty-check, /research-review |
 | `implementation` | /research-refine, /research-refine-pipeline, /experiment-plan, /experiment-bridge, /run-experiment |
 | `review` | /auto-review-loop |
 

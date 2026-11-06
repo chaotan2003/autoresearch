@@ -35,7 +35,7 @@ def has_send_input_block(text: str) -> bool:
 def test_codex_skill_set_matches_mainline() -> None:
     main_names = skill_names(MAIN_SKILLS)
     codex_names = skill_names(CODEX_SKILLS)
-    assert len(main_names) == 51
+    assert len(main_names) == 49
     assert main_names == codex_names
 
 
@@ -266,8 +266,6 @@ def test_overlay_boundaries_are_exact() -> None:
     expected_gemini = {
         "auto-review-loop",
         "idea-creator",
-        "idea-discovery",
-        "idea-discovery-robot",
         "novelty-check",
         "research-refine",
         "research-review",
@@ -420,11 +418,6 @@ def test_codex_medium_risk_skills_preserve_claude_semantics() -> None:
             "query_pack.md",
             "Write Ideas to Research Wiki",
             "review-tracing.md",
-        ],
-        "idea-discovery": [
-            "Load Research Brief",
-            "RESEARCH_BRIEF.md",
-            "Research Brief",
         ],
         "deepxiv": [
             "Semantic Scholar",

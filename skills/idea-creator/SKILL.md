@@ -50,7 +50,7 @@ Generate publishable research ideas for: $ARGUMENTS
 
 ## Overview
 
-Given a broad research direction from the user, systematically generate, validate, and rank concrete research ideas. Standalone, Phase 1's landscape survey is **inline** (WebSearch — it does not invoke `/research-lit`); Phases 4-5 invoke `/novelty-check`, `/run-experiment`, and `/monitor-experiment` for validation and pilots. For the full sub-skill pipeline (`/research-lit` → idea generation → `/novelty-check` → `/research-review`), run `/idea-discovery` (Workflow 1), which orchestrates this skill.
+Given a broad research direction from the user, systematically generate, validate, and rank concrete research ideas. Standalone, Phase 1's landscape survey is **inline** (WebSearch — it does not invoke `/research-lit`); Phases 4-5 invoke `/novelty-check`, `/run-experiment`, and `/monitor-experiment` for validation and pilots. For the full sub-skill pipeline (`/research-lit` → idea generation → `/novelty-check` → `/research-review`), run `/autoresearch` (Workflow 1), which orchestrates this skill.
 
 ## Constants
 
@@ -598,7 +598,7 @@ elif research-wiki/ exists AND [ -z "$WIKI_SCRIPT" ]:
 > - **[Output Language Protocol](../shared-references/output-language.md)** — respect the project's language setting
 
 > **Composed mode** — if invoked with `— composed: <canonical-report-path>` (e.g.
-> `/idea-discovery` passes `— composed: idea-stage/IDEA_REPORT.md`), that report is the
+> `/autoresearch` passes `— composed: idea-stage/IDEA_REPORT.md`), that report is the
 > single canonical deliverable: fold the literature survey, novelty notes, and any
 > external-review conclusions into it as sections/appendices instead of emitting
 > `LIT_LANDSCAPE.md` / `RESEARCH_REVIEW.md` / `MANIFEST.md` alongside. Pilot scratch is

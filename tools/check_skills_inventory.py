@@ -236,16 +236,16 @@ def check_inventory() -> list[str]:
     # both thresholds) and actually wired into a heartbeat consumer — else it is dead code.
     # Same dead-code guard as the Agent-grant⇒cite rule above.
     extc = read(SKILLS_ROOT / "shared-references" / "external-cadence.md")
-    idea = read(SKILLS_ROOT / "idea-discovery" / "SKILL.md")
+    idea = read(SKILLS_ROOT / "idea-creator" / "SKILL.md")
     tool_stall = (REPO_ROOT / "tools" / "iteration_log.py").is_file()
     doc_ladder = bool(re.search(r"forced structural pivot", extc, re.IGNORECASE)) and \
         bool(re.search(r"stale_count`?\s*>=\s*2", extc)) and bool(re.search(r"stale_count`?\s*>=\s*4", extc))
-    # iteration_log.py has one documented consumer left (/idea-discovery Phase 2 writes each
+    # iteration_log.py has one documented consumer left (/idea-creator S2 writes each
     # chosen frame with `--direction`); without that write-back the helper is dead code.
     wired = 'iteration_log.py' in idea and '--direction' in idea
     require(tool_stall, "tools/iteration_log.py (stall→pivot, B) must exist", failures)
     require(doc_ladder, "external-cadence.md must document the stall ladder with both thresholds (>=2 structural, >=4 human) (B)", failures)
-    require(wired, "idea-discovery/SKILL.md must document the iteration_log direction-diversity write-back (else the helper is an orphan writer) (B)", failures)
+    require(wired, "idea-creator/SKILL.md must document the iteration_log direction-diversity write-back (else the helper is an orphan writer) (B)", failures)
 
     # research_wiki.py add_claim (claim layer) ⇔ its documented birth trigger in
     # /proof-checker. add_claim is a writer; without a skill that calls it, the claim

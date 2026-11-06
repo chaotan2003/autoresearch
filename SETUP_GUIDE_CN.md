@@ -75,7 +75,7 @@ bash ~/aris_repo/tools/install_aris.sh
 # 只装需要的 skill（选择性安装）：
 bash ~/aris_repo/tools/install_aris.sh --list-groups                  # 查看 6 个功能分组
 bash ~/aris_repo/tools/install_aris.sh --groups ideation,experiments  # 按组安装
-bash ~/aris_repo/tools/install_aris.sh --skills idea-discovery        # 按 skill 安装（依赖自动带上）
+bash ~/aris_repo/tools/install_aris.sh --skills autoresearch        # 按 skill 安装（依赖自动带上）
 # 全新安装时不带任何选择参数（且在终端里跑）会进入全屏勾选菜单（空格勾选，组行整组切换）
 
 # 其他常用：
@@ -267,7 +267,7 @@ codex mcp list           # Codex CLI MCP 服务（如适用）
 
 ```
 claude
-> /idea-discovery "你的研究方向"              # 工作流 1 — 方向要具体！不要 "NLP"，要 "离散扩散语言模型的 factorized gap"
+> /autoresearch "你的研究方向"              # 工作流 1 — 方向要具体！不要 "NLP"，要 "离散扩散语言模型的 factorized gap"
 > /experiment-bridge                         # 工作流 1.5 — 有计划了？实现 + 部署 + 收结果
 > /auto-review-loop "你的结果或范围"            # 工作流 2：审稿 → 修复 → 再审，直到通过
 ```

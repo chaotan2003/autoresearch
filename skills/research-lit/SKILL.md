@@ -727,7 +727,7 @@ If Zotero BibTeX was exported, include a `references.bib` snippet for direct use
 - If Obsidian is available, optionally create a literature review note in the vault
 
 > **Composed mode** — if invoked with `— composed: <canonical-report-path>` (an
-> orchestrator like `/idea-discovery` passes this), do **not** write a standalone
+> orchestrator like `/autoresearch` passes this), do **not** write a standalone
 > landscape `.md`. Return the structured table + narrative summary for the orchestrator
 > to fold into its canonical report as a "Literature Landscape" section; the report
 > links any saved PDFs/`references.bib`, it does not get a duplicate landscape file.

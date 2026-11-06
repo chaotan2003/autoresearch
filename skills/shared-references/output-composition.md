@@ -1,6 +1,6 @@
 # Output Composition Protocol
 
-When a skill runs **inside an orchestrating pipeline** (e.g. `/idea-discovery`,
+When a skill runs **inside an orchestrating pipeline** (e.g. `/autoresearch`,
 `/experiment-bridge`, `/kill-argument`), its intermediate
 findings should fold into the pipeline's single canonical deliverable instead of
 each sub-skill scattering its own overlapping `.md` files. When the same skill
@@ -9,7 +9,7 @@ runs **on its own**, it writes its files exactly as documented — unchanged.
 This protocol defines the two states, the explicit signal that switches between
 them, and the **enforced default**: with no signal, behave standalone.
 
-> Past idea-discovery runs scattered `LIT_LANDSCAPE.md` + `RESEARCH_REVIEW.md` +
+> Past autoresearch runs scattered `LIT_LANDSCAPE.md` + `RESEARCH_REVIEW.md` +
 > `MANIFEST.md` + multiple pilot logs whose content was *also* summarized inside
 > `IDEA_REPORT.md` — pure duplication. This contract is the fix, lifted out of the
 > individual skills so the ~20 skills that compose these don't each carry (and

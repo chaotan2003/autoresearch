@@ -137,8 +137,8 @@ Skills send these events at these moments:
 | `/auto-review-loop` | `review_scored` | After each round's review score |
 | `/auto-review-loop` | `pipeline_done` | Loop complete (positive or max rounds) |
 | `/run-experiment` | `experiment_done` | Screen session finishes |
-| `/idea-discovery` | `checkpoint` | Between phases (if interactive) |
-| `/idea-discovery` | `pipeline_done` | Final report ready |
+| `/autoresearch` | `checkpoint` | Between phases (if interactive) |
+| `/autoresearch` | `pipeline_done` | Final report ready |
 | `/monitor-experiment` | `experiment_done` | Results collected |
 
 ## Key Rules

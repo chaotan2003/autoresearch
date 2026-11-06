@@ -1,6 +1,6 @@
 # ARIS Skills Catalog
 
-Every skill that ships with ARIS, grouped by role. **51 skills** as of the
+Every skill that ships with ARIS, grouped by role. **49 skills** as of the
 latest update; new skills land via PR and get added to the table below.
 
 - Each `Skill` link goes to the canonical `SKILL.md` (the LLM-readable spec).
@@ -25,12 +25,10 @@ End-to-end pipelines that chain many sub-skills. Most users start here.
 | Skill | Role | Requires |
 |---|---|---|
 | [`/autoresearch`](../skills/autoresearch/SKILL.md) | **The pipeline** — 8-stage state machine (literature → ideas → ranking → method → baseline → contract → implementation → experiments) with two human gates; `/autoresearch --resume` continues where the run stopped | Codex MCP, agy (Antigravity) |
-| [`/idea-discovery`](../skills/idea-discovery/SKILL.md) | ⚠️ **Deprecated** — superseded by [`/autoresearch`](../skills/autoresearch/SKILL.md); scheduled for removal | Codex MCP |
-| [`/idea-discovery-robot`](../skills/idea-discovery-robot/SKILL.md) | ⚠️ **Deprecated** — use `/autoresearch --robot`; scheduled for removal | Codex MCP |
 | [`/experiment-bridge`](../skills/experiment-bridge/SKILL.md) | **Workflow 1.5** — read experiment plan → implement code → sanity check → deploy to GPU → collect initial results | GPU (local / remote / Vast / Modal) |
 | [`/auto-review-loop`](../skills/auto-review-loop/SKILL.md) | **Workflow 2** — autonomous review → fix → re-review until positive or max rounds; uses Codex MCP reviewer | Codex MCP |
 | [`/auto-review-loop-llm`](../skills/auto-review-loop-llm/SKILL.md) | Same as Workflow 2 but uses any OpenAI-compatible LLM via [`llm-chat`](../mcp-servers/llm-chat/) MCP server | llm-chat MCP |
-| [`/research-refine-pipeline`](../skills/research-refine-pipeline/SKILL.md) | Sub-pipeline used by `/idea-discovery` — refine method + plan experiments in one chain | Codex MCP |
+| [`/research-refine-pipeline`](../skills/research-refine-pipeline/SKILL.md) | Sub-pipeline used by `/autoresearch` — refine method + plan experiments in one chain | Codex MCP |
 | [`/dse-loop`](../skills/dse-loop/SKILL.md) | Autonomous design-space exploration loop for computer architecture / EDA — run → analyze → tune → iterate until objective met | Domain-specific tools |
 | [`/meta-optimize`](../skills/meta-optimize/SKILL.md) | **Workflow M** — analyze ARIS usage logs and propose SKILL.md / prompt / default-parameter improvements (outer-loop self-evolution) | Codex MCP, hook logging |
 | [`/meta-apply`](../skills/meta-apply/SKILL.md) | **Privileged landing gate** — the only skill allowed to mutate the skill corpus; lands `/meta-optimize` patches the human approved, after a fresh cross-model jury PASS on the staged diff (read-only producer ≠ privileged applier) | Codex MCP, human-in-loop |

@@ -3,7 +3,7 @@
 ## Pipeline Status
 
 ```yaml
-stage: idle          # idle | idea-discovery | implementation | training | review | paper
+stage: idle          # idle | autoresearch | implementation | training | review | paper
 idea: ""             # Current idea title (one line)
 contract: ""         # Path to research_contract.md (e.g., idea-stage/docs/research_contract.md)
 current_branch: ""   # Git branch for this idea

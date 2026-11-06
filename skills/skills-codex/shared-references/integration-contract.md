@@ -276,7 +276,7 @@ answer "did this integration run?"
 ### 4. Visible checklist — for long workflows
 
 If the integration fires inside a multi-step workflow (paper-writing
-Phase 6, idea-discovery Phase 7, etc.), render a **visible checkbox
+Phase 6, autoresearch Phase 7, etc.), render a **visible checkbox
 block** at the start of the phase so the executor has to confront each
 row before claiming done. Prose-only "MUST" inside a long SKILL.md is
 the first thing to get skipped.

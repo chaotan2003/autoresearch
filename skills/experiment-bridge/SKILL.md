@@ -99,7 +99,7 @@ Proceeding to implementation.
 ```
 
 **Research-contract fallback**: if `idea-stage/docs/research_contract.md` does
-not exist yet (idea selected outside `/idea-discovery`, or an older run),
+not exist yet (idea selected outside `/autoresearch`, or an older run),
 create it now from `templates/RESEARCH_CONTRACT_TEMPLATE.md` using the selected
 idea + claims from the experiment plan. Downstream `/result-to-claim` and
 `/ablation-planner` read this file as the claims source, and session recovery
@@ -395,7 +395,7 @@ Ready for Workflow 2:
 ## Composing with Other Skills
 
 ```
-/idea-discovery "direction"          ← Workflow 1: find + refine + plan
+/autoresearch "direction"          ← Workflow 1: find + refine + plan
 /experiment-bridge                   ← you are here (Workflow 1.5: implement + deploy)
 /auto-review-loop "topic"            ← Workflow 2: review + iterate
 ```

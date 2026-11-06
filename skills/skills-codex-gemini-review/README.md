@@ -24,8 +24,6 @@ audits reached accepted assurance.
 Current overrides (7):
 
 - `idea-creator`
-- `idea-discovery`
-- `idea-discovery-robot`
 - `research-review`
 - `novelty-check`
 - `research-refine`
@@ -40,8 +38,6 @@ Current overrides (7):
   - `auto-review-loop`
   - `idea-creator`
 - **2 wrappers** mostly orchestrate downstream reviewer-aware skills and pass `REVIEWER_MODEL=gemini-review` through:
-  - `idea-discovery`
-  - `idea-discovery-robot`
 
 ## Install
 

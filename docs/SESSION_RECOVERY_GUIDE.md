@@ -22,7 +22,7 @@ Add this to your project `CLAUDE.md`:
 
 ```yaml
 ## Pipeline Status
-stage: idea-discovery | implementation | training | paper
+stage: autoresearch | implementation | training | paper
 idea: "one-line description of the current idea"
 contract: idea-stage/docs/research_contract.md
 current_branch: feature/idea-name
@@ -56,7 +56,7 @@ next: what to do next
 
 The LLM should update Pipeline Status **immediately** when any of these happen:
 
-- Stage transition (e.g., idea-discovery → implementation)
+- Stage transition (e.g., autoresearch → implementation)
 - Idea selected or changed
 - Baseline confirmed
 - Training started or finished
@@ -65,7 +65,7 @@ The LLM should update Pipeline Status **immediately** when any of these happen:
 
 ### Why You Need a Research Contract
 
-After Workflow 1 (`/idea-discovery`), `idea-stage/IDEA_REPORT.md` contains 8-12 candidate ideas. Once you pick one and move to implementation, keeping all candidates in context wastes the LLM's working memory and degrades its output quality.
+After Workflow 1 (`/autoresearch`), `idea-stage/IDEA_REPORT.md` contains 8-12 candidate ideas. Once you pick one and move to implementation, keeping all candidates in context wastes the LLM's working memory and degrades its output quality.
 
 **`idea-stage/docs/research_contract.md`** solves this by extracting *only the active idea* into a focused working document — claims, experiment design, baselines, and results. New sessions read this instead of the full IDEA_REPORT.md. See [`templates/RESEARCH_CONTRACT_TEMPLATE.md`](../templates/RESEARCH_CONTRACT_TEMPLATE.md) for the template.
 
@@ -247,8 +247,8 @@ fi
 # 5. Suggest stage-appropriate actions
 STAGE=$(grep -oP '(?<=stage:\s).*' "$PROJECT_DIR/CLAUDE.md" 2>/dev/null | head -1 | tr -d ' ')
 case "$STAGE" in
-  idea-discovery)
-    OUTPUT="$OUTPUT\n\n[session-restore] Stage: idea-discovery. Resume with /idea-discovery or /research-lit." ;;
+  autoresearch)
+    OUTPUT="$OUTPUT\n\n[session-restore] Stage: autoresearch. Resume with /autoresearch or /research-lit." ;;
   implementation)
     OUTPUT="$OUTPUT\n\n[session-restore] Stage: implementation. Resume with /experiment-bridge." ;;
   training)

@@ -375,7 +375,7 @@ Ready for Workflow 2:
 ## Composing with Other Skills
 
 ```
-/idea-discovery "direction"          ← Workflow 1: find + refine + plan
+/autoresearch "direction"          ← Workflow 1: find + refine + plan
 /experiment-bridge                   ← you are here (Workflow 1.5: implement + deploy)
 /auto-review-loop "topic"            ← Workflow 2: review + iterate
 ```

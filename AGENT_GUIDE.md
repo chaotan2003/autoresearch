@@ -27,7 +27,7 @@ acceptance requires actual identities, completed scope, and the applicable gate.
 The two partial overlays are frozen; [migration](skills/skills-codex/README.md#migrate-frozen-partial-overlays)
 preserves existing links and customizations.
 
-**Full catalog**: [`docs/SKILLS_CATALOG.md`](docs/SKILLS_CATALOG.md) — **51 skills**, grouped by role.
+**Full catalog**: [`docs/SKILLS_CATALOG.md`](docs/SKILLS_CATALOG.md) — **49 skills**, grouped by role.
 
 Use [`/lean-formalize`](skills/lean-formalize/SKILL.md) when the user requests Lean work or a substantial mathematical obligation benefits from formal verification. It preserves the original statement, connects the proof, and checks the final declaration and its axioms; ordinary mathematical drafting continues to use `/proof-writer`.
 
@@ -138,7 +138,7 @@ Main chain:      W1 → W1.5 → W2
 
 | ID | Skill | Input | Output | When to invoke |
 |----|-------|-------|--------|----------------|
-| W1 | `/idea-discovery "direction"` | research direction | `IDEA_REPORT.md`, `EXPERIMENT_PLAN.md`, `FINAL_PROPOSAL.md` | Starting new research |
+| W1 | `/autoresearch "direction"` | research direction | `IDEA_REPORT.md`, `EXPERIMENT_PLAN.md`, `FINAL_PROPOSAL.md` | Starting new research |
 | W1.5 | `/experiment-bridge` | `EXPERIMENT_PLAN.md` | running code, `EXPERIMENT_LOG.md` | Have a plan, need to implement |
 | W2 | `/auto-review-loop "scope"` | paper + results | improved paper + `REVIEW_STATE.json` | Iterative improvement loop |
 
@@ -177,7 +177,7 @@ Skills communicate through plain-text files in known locations:
 
 | Artifact | Created by | Consumed by |
 |----------|-----------|-------------|
-| `IDEA_REPORT.md` | `/idea-discovery` | `/experiment-bridge` |
+| `IDEA_REPORT.md` | `/autoresearch` | `/experiment-bridge` |
 | `refine-logs/FINAL_PROPOSAL.md` | `/research-refine` | `/experiment-plan` |
 | `EXPERIMENT_PLAN.md` | `/experiment-plan` | `/experiment-bridge` |
 | `EXPERIMENT_LOG.md` | `/experiment-bridge` | `/auto-review-loop`, `/result-to-claim` |

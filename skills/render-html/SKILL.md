@@ -286,7 +286,7 @@ Verdict rules:
 
 | Skill | Artifact | Review tier | Why |
 |---|---|---|---|
-| `/idea-discovery` | `idea-stage/IDEA_REPORT.md` | `--no-review` | Interim; source went through novelty + cross-model review already |
+| `/autoresearch` | `idea-stage/IDEA_REPORT.md` | `--no-review` | Interim; source went through novelty + cross-model review already |
 | `/auto-review-loop` | `review-stage/AUTO_REVIEW.md` | `--no-review` | Per-round log; the loop itself is the cross-model review |
 | `/kill-argument` | `<paper-dir>/KILL_ARGUMENT.md` | full gate | Audit-class artifact; matches skill's own cross-model invariant |
 | `/proof-checker` | `PROOF_AUDIT.md` | full gate | Audit-class artifact |

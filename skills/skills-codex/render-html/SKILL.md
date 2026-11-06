@@ -281,7 +281,7 @@ Verdict rules:
 
 **Phase 2 (later, planned):** Selectively auto-emit HTML at workflow termination:
 
-- `/idea-discovery` completes → also writes `idea-stage/IDEA_REPORT.html` (academic)
+- `/autoresearch` completes → also writes `idea-stage/IDEA_REPORT.html` (academic)
 - `/auto-review-loop` terminates → also writes `review-stage/AUTO_REVIEW.html` (academic, with `--state`)
 - `/kill-argument` already writes `.md + .json` → naturally extends to `+ .html`
 - `/research-wiki render` subcommand generates `research-wiki/index.html` dashboard

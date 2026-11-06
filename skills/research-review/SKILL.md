@@ -200,7 +200,7 @@ Save the full interaction and conclusions to a review document in the project ro
 Update project memory/notes with key review conclusions.
 
 > **Composed mode** — if invoked with `— composed: <canonical-report-path>` (an
-> orchestrator like `/idea-discovery` passes this), do **not** write a standalone review
+> orchestrator like `/autoresearch` passes this), do **not** write a standalone review
 > `.md` in the project root. The raw conversation is already persisted to `.aris/traces/…`
 > (see *Review Tracing* below — that audit copy is kept in every mode); fold the review
 > *conclusions* (consensus, claims matrix, prioritized TODOs) into the orchestrator's

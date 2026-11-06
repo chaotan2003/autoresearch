@@ -59,7 +59,7 @@
 | B2 | DSH 里能真调 agy 和 Codex | 1.5 小时 | ✅ MCP 服务端协议级实测通过（整条链路真写出文件）；4 个条目已写入 DSH 配置，**等一次重启**加载 |
 | B3 | 8 个步骤各自能单独跑 | 6-8 小时 | ✅ 完成（3 个新 skill + 6 个 stage contract；51 skills，987 passed） |
 | B4 | 一条命令跑到闸门，能停能续 | 2 小时 | ✅ 完成（S1→S4 真跑，停在 Gate A；状态跨进程可续） |
-| B5 | 文档/测试/装机更新，CI 绿 | 2 小时 | 🟡 第一步已做：两个旧编排器已标 **Deprecated** 并下架推荐位、方向去重写回已迁到 `/idea-creator`；真删清单见 DETAILS 的 O 节 |
+| B5 | 文档/测试/装机更新，CI 绿 | 2 小时 | ✅ 完成：删除 `/idea-discovery`、`/idea-discovery-robot` 及其工具/测试/镜像；**49 skills**，961 passed |
 
 **已真跑通 S1→S4 并停在 Gate A**（不是模拟）：agy 搜 13 篇全核验 → agy 提 10 个 idea × 7 字段 → codex 独立打分排序 → agy 查新写方法提案 → 状态机挂起等人签字。细节见 `AUTORESEARCH_DETAILS.md` 的 K、L 节。
 
